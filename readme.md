@@ -8,6 +8,11 @@ Includes stand-alone functions.
 Functions may be broken up into classes over time.
 Functions may be made into modular(js modules) code over time.
 
+Testing:
+Some important functions are being tested.
+More tests may be added over time.
+Tests can be performed in the "tests" folder with "npm run mocha" after "npm install".
+
 ## Format
 
 Utility: Non dependent functions.
