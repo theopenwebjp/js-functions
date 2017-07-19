@@ -3,7 +3,10 @@
 ## Introduction
 
 Set of general functions that can be used in JavaScript.
-Includes stand-alone functions or functions as a module.
+Includes stand-alone functions.
+
+Functions may be broken up into classes over time.
+Functions may be made into modular(js modules) code over time.
 
 ## Format
 

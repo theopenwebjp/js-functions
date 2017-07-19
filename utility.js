@@ -5,6 +5,133 @@ No jQuery, etc.
 May include functions with some unsupported environments but should avoid latest js.
 */
 
+function copyVariable(variable, keepReferences){
+  var copy = null;
+  if(isObject(variable)){
+    if(keepReferences){
+      copy = Object.assign({}, variable)
+    }else{
+      copy = copyObject(variable);
+    }
+  }else if(Array.isArray(variable)){
+    if(keepReferences){
+      copy = variable.slice(0);
+    }else{
+      copy = copyObject(variable);
+    }
+  }else{
+    copy = variable;
+  }
+  
+  return copy;
+}
+
+function copyObject(obj){
+  //Object.assign({}, obj); seems to keep inner references.
+  var copy = JSON.parse(JSON.stringify(obj));
+  return copy;
+}
+
+function equals(a, b){
+  /*
+  Required because NaN !== NaN:
+  var i = document.createElement("input"); i.valueAsNumber === i.valueAsNumber;
+  https://stackoverflow.com/questions/19955898/why-is-nan-nan-false
+  */
+  
+  if(Number.isNaN(a)){
+    return Number.isNaN(b);
+  }
+  
+  else{
+    return (a === b);
+  }
+}
+
+function dataEquals(a, b){
+  /*
+  Looks at data only(No object === object comparison. Instead checks each key and value)
+  */
+  
+  if(isObject(a) && isObject(b)){
+    return objectDataEquals(a, b);
+  }
+  
+  else{
+    return equals(a, b);
+  }
+}
+
+function dataInArray(data, arr){
+  for(var i=0; i<arr.length; i++){
+    if(dataEquals(data, arr[i])){
+      return true;
+    }
+  }
+  
+  //FAILED
+  return false;
+}
+
+function arrayEquals(a, b){
+  if(a.length !== b.length){
+    return false;
+  }
+  
+  for(var i=0; i<a.length; i++){
+    if(!equals(a[i], b[i])){
+      return false;
+    }
+  }
+  
+  //PASSED
+  return true;
+}
+
+function objectDataEquals(a, b, looped){
+  if(!looped){//Keys only
+    looped = [];
+  }
+  
+  //Key check
+  if(!arrayEquals(Object.keys(a), Object.keys(b))){
+    return false;
+  }
+  
+  for(var key in a){
+    
+    //Ignore already looped
+    if(looped.indexOf(key) >= 0){
+      continue;
+    }
+    
+    looped.push(key);
+    
+    //Type check
+    if(typeof a[key] !== typeof b[key]){
+      return false;
+    }
+    
+    //Value check
+    if(isObject(a[key])){
+      if(!objectDataEquals(a[key], b[key], looped)){
+        return false;
+      }
+    }else if(Array.isArray(a[key])){
+      if(!arrayEquals(a[key], b[key])){
+        return false;
+      }
+    }else{
+      if(!equals(a[key], b[key])){
+        return false;
+      }
+    }
+  }
+  
+  //PASSED
+  return true;
+}
+
 function applyObj(from, to, condition){
 
   //Check
@@ -14,83 +141,292 @@ function applyObj(from, to, condition){
 
   for(var key in from){
 
-      //Condition handling
-      if(condition && !condition(key, from, to)){
-          continue;
-      }
+    //Condition handling
+    if(condition && !condition(key, from, to)){
+        continue;
+    }
 
-      //Set
-      to[key] = from[key];
+    //Set
+    to[key] = from[key];
   }
 
   return to;
 }
 
+function loopObject(obj, onItem, looped){
+  
+  //Prevents cyclic reference infinite looping
+  if(!looped){
+    looped = [];
+  }
+  
+  looped.push(obj);
+  
+  var returnValue;
+  for(var key in obj){
+    
+    //Nested loop
+    if( isNonDomObject(obj[key])){
+      
+      if(!dataInArray(obj[key], looped)){
+        loopObject(obj[key], onItem, looped);
+      }else{
+        //IGNORE
+      }
+    }
+    
+    //Handle
+    returnValue = onItem(obj, key, obj[key]);
+    if(!equals(returnValue, obj[key])){
+      obj[key] = returnValue;
+    }
+  }
+  
+  return obj;
+}
+
+function loopObjectComplex(obj, onItem, status){
+  /*
+  Complex version of looping object.
+  Passes on all possible data in status object.
+  Will be slower than simple looping object function.
+  */
+  
+  if(!status){
+    status = {
+      firstObject: obj,
+      looped: [],
+      object: obj,
+      key: null,
+      value: null,
+      path: [],
+      levels: 0,
+      returnValue: null
+    };
+  }
+  
+  status.looped.push(obj);
+  
+  //Object checking
+  if(status.object && status.key !== null){
+    onItem(status);
+  }
+  
+  var i = 0;
+  var keys = [];
+  var checkedKeys = [];
+  keys = Object.keys(obj);//Using keys array makes it possible to update keys dynamically.
+  while(i < keys.length){
+    key = keys[i];
+    
+    //Duplicate checking
+    if(checkedKeys.indexOf(key) >= 0){
+      i++;
+      continue;
+    }else{
+      checkedKeys.push(key);
+    }
+    
+    //Update status
+    status.object = obj;
+    status.key = key;
+    status.value = obj[key];
+    status.returnValue = status.value;
+    
+    //Path(start)
+    status.path.push(key);
+    status.levels = status.path.length;
+    
+    //Nested loop
+    if( isNonDomObject(obj[key]) ){
+      
+      if(!dataInArray(obj[key], status.looped)){
+        loopObjectComplex(obj[key], onItem, status);
+      }else{
+        //IGNORE
+      }
+    }
+    
+    else{
+      onItem(status);
+      if(!equals(status.value, status.returnValue)){
+        obj[key] = status.returnValue;
+      }
+    }
+    
+    //Path(end)
+    status.path.pop();
+    status.levels = status.path.length;
+    
+    //Key
+    keys = Object.keys(obj);
+    i = 0;
+  }
+  
+  return obj;
+}
+
+function expandCommonObjectIntoObject(obj, parentObj, insertIndex){
+  //Expands and inserts data of object into object.
+  
+  var key, i;
+  if(Array.isArray(parentObj)){
+    for(i=0; i<obj.length; i++){
+      key = (insertIndex + i);
+      
+      parentObj.splice(key, 0, obj[i]);//Moves rest forwards
+    }
+  }else{
+    for(key in obj){
+      parentObj[key] = obj[key];
+    }
+  }
+  
+  return parentObj;
+}
+
+function deleteObjectProperty(obj, prop){
+  //Handles array or obj because indexing similar.
+  
+  if(Array.isArray(obj)){
+    var index = obj.indexOf(prop);
+    if(index >= 0){
+      prop.splice(index, 1);
+    }
+  }else{
+    delete obj[prop];
+  }
+}
+
 function promptPrint(){
-    window.print();
+  window.print();
 }
 
 //Handling
 function e(id){
-    return document.getElementById(id);
+  return document.getElementById(id);
 }
 
-function log(data){
-    if(console && console.log){
-        console.log(data);
-    }
+function getElementsByIds(ids){
+  var elements = [];
+  var element;
+  
+  for(var i=0; i<ids.length; i++){
+    element = e(ids[i]);
+    if(element){elements.push(element);}
+  }
+  
+  return elements;
+}
+
+function log(data, options){
+  //https://developers.google.com/web/tools/chrome-devtools/console/console-write#styling_console_output_with_css
+  if(!options){
+    options = {
+      prettify: false,
+      title: "",
+      beforeLog: null,
+      afterLog: null,
+      type: "log",//console functions: log, info, warn, error, ...
+    };
+  }
+  
+  if(!window.console){
+    return false;
+  }
+  
+  //Type
+  var type = "log";
+  if(options.type && console[type]){
+    type = options.type;
+  }
+  
+  //Prettify
+  if(options.prettify){
+    options.beforeLog = function(){log("");};
+  }
+  
+  if(options.beforeLog){options.beforeLog(data);}
+  if(options.title){console.log(options.title);}
+  console[type](data);
+  if(options.afterLog){options.afterLog(data);}
+}
+
+function logObjectOnSingleLine(obj){
+  var str = "";
+  var LF = "\n";
+  for(var key in obj){
+    str+= (key + ": " + String(obj[key]) + LF);
+  }
+  
+  console.log(str);
+}
+
+function getDataUrlExtension(dataUrl){
+  return dataUrl.split(";")[0].split("/")[1];
 }
 
 function download(data, name, mimeType){
-    var blob = new Blob([data], {type: mimeType});
-    return downloadBlob(blob, name);
+  var blob = new Blob([data], {type: mimeType});
+  return downloadBlob(blob, name);
+}
+
+function downloadDataUrl(dataUrl, name){
+  var url = dataUrl.replace(/^data:image\/[^;]/, 'data:application/octet-stream');
+  var extension = getDataUrlExtension(dataUrl);
+  var fullName = (name + "." + extension);
+  downloadLink(url, fullName);
 }
 
 function downloadBlob(blob, name){
-    //CREATE URL ELEMENT
-    var url = window.URL.createObjectURL(blob);
-    var link = window.document.createElement('a');
+  //CREATE URL ELEMENT
+  var url = window.URL.createObjectURL(blob);
+  
+  //EXTENSION
+  var extension;
+  if(blob.type){
+      extension = blob.type.split("/")[1];
+  }else{
+      extension = "txt";
+  }
 
-    //EXTENSION
-    var extension;
-    if(blob.type){
-        extension = blob.type.split("/")[1];
-    }else{
-        extension = "txt";
-    }
+  //FULL NAME
+  var fullName = (name + "." + extension);
 
-    //FULL NAME
-    var fullName = (name + "." + extension);
+  //Internet Explorer
+  if(window.navigator.msSaveBlob){
+    window.navigator.msSaveBlob(blob, fullName);
+  }
 
-    //Internet Explorer
-    if(window.navigator.msSaveBlob){
-        window.navigator.msSaveBlob(blob, fullName);
-    }
+  //Other
+  else{
+    downloadLink(url, fullName);
+  }
 
-    //Other
-    else{
-        //CREATE LINK
-        link.href = url;
-        link.download = fullName;
+  //COMPLETE
+  return true;
+}
 
-        //Need to append child in Firefox
-        document.body.appendChild(link);
+function downloadLink(url, fullName){
+  //CREATE LINK
+  var link = window.document.createElement('a');
+  link.href = url;
+  link.download = fullName;
 
-        //EXECUTE LINK
-        link.click();
-        /*
-        //Doesn't work in Firefox
-        var click = document.createEvent("Event");
-        click.initEvent("click", true, true);
-        link.dispatchEvent(click);
-        */
+  //Need to append child in Firefox
+  document.body.appendChild(link);
 
-        //Remove Link
-        link.parentElement.removeChild(link);
-    }
+  //EXECUTE LINK
+  link.click();
+  /*
+  //Doesn't work in Firefox
+  var click = document.createEvent("Event");
+  click.initEvent("click", true, true);
+  link.dispatchEvent(click);
+  */
 
-    //COMPLETE
-    return true;
+  //Remove Link
+  link.parentElement.removeChild(link);
 }
 
 function toReadableString(data){
@@ -129,20 +465,22 @@ function toObject(data){
 }
 
 function parseFuzzyJson(str){
-
+  var obj;
+  
   //Try standard JSON
-  try{
-    var obj = parseJson(str);
-    return obj;
-  }
-
-  //Try as object
-  catch(err){
-
+  obj = parseJson(str);
+  if(obj === null){
     //Non-sandboxed(DON'T USE USER CONTENT! DANGEROUS!)
-    obj = eval("(" + str + ")");
-    return obj;
+    try{
+      obj = eval("(" + str + ")");
+    }catch(err){
+      obj = null;
+    }finally{
+      
+    }
   }
+  
+  return obj;
 }
 
 function parseJson(str){
@@ -175,121 +513,139 @@ function stringifyJson(json){
 }
 
 function isObject(obj){
-    if(
-        typeof obj === "object" &&
-        obj !== null
-    ){
-        return true;
-    }else{
-        return false;
-    }
+  //object that can be traversed
+  if(
+    typeof obj === "object" &&
+    obj !== null &&
+    !Array.isArray(obj)
+  ){
+    return true;
+  }else{
+    return false;
+  }
+}
+
+function isNonDomObject(obj){
+  if(isObject(obj) && !obj.nodeType){
+    return true;
+  }else{
+    return false;
+  }
 }
 
 function getDataSet(data){
-    //SPEC: Makes sure format is ok for server.
+  //SPEC: Makes sure format is ok for server.
 
-    if(!isObject(data)){
-        return {};
-    }
+  if(!isObject(data)){
+      return {};
+  }
 
-    return data;
+  return data;
 }
 
 function executeAjax(dataSet, url, options){
-    //SPEC: dataSet is simple obj  with key/value pairs.
+  //SPEC: dataSet is simple obj  with key/value pairs.
 
-    //Default
-    //
+  //Default
+  //
 
-    //Options
-    if(isObject(options)){
-        //
-    }
+  //Options
+  if(isObject(options)){
+      //
+  }
 
-    //URL check
-    if(!url){
-        return false;
-    }
+  //URL check
+  if(!url){
+    return handleAjaxResponse({}, options);
+  }
 
-    //Header settings
-    var contentEncoding = "gzip";
-    var contentType = "application/x-www-form-urlencoded; charset=UTF-8";
+  //Header settings
+  var contentEncoding = "gzip";
+  var contentType = "application/x-www-form-urlencoded; charset=UTF-8";
 
-    //Data
-    var params = getAjaxParams(dataSet);
+  //Data
+  var params = getAjaxParams(dataSet);
 
-    //Connection
-    var xhr =  new XMLHttpRequest();
-    xhr.open("POST", url, true);//Always async
-    xhr.setRequestHeader("Content-Encoding", contentEncoding);
-    xhr.setRequestHeader("Content-Type", contentType);//REQUIRED FOR PARAMS FORMAT
-    xhr.onload = function(xhr){
-        handleAjaxResponse(xhr, options);
-    }
-    return xhr.send(params);
+  //Connection
+  var xhr = new XMLHttpRequest();
+  xhr.open("POST", url, true);//Always async
+  xhr.setRequestHeader("Content-Encoding", contentEncoding);
+  xhr.setRequestHeader("Content-Type", contentType);//REQUIRED FOR PARAMS FORMAT
+  xhr.onload = function(xhr){
+    handleAjaxResponse(xhr, options);
+  }
+  xhr.onerror = function(){
+    handleAjaxResponse(xhr, options);
+  }
+  return xhr.send(params);
 }
 
 function getAjaxParams(obj){
 
-    var params = "";
-    var i = 0;
+  var params = "";
+  var i = 0;
 
-    for(var key in obj){
-        if(i > 0){params+= "&";}
-        params+= key;
-        params+= "=";
-        params+= encodeURIComponent(obj[key]);
+  for(var key in obj){
+    if(i > 0){params+= "&";}
+    params+= key;
+    params+= "=";
+    params+= encodeURIComponent(obj[key]);
 
-        //Inc
-        i++;
-    }
+    //Inc
+    i++;
+  }
 
-    return params;
+  return params;
 }
 
 function handleAjaxResponse(xhr, options){
 
-    //Not finished
-    if(xhr.responseType !== xhr.DONE){
-        return false;
-    }
+  //Not finished
+  if(xhr && xhr.responseType !== xhr.DONE){
+      return false;
+  }
 
-    //Default
-    var callback = null;
+  //Default
+  var callback = null;
 
-    //Options
-    if(isObject(options)){
-
-        //Callback
-        if(options.callback !== undefined){
-            callback = options.callback;
-        }
-    }
-
-    //Handle response
-    var response = xhr.response;
+  //Options
+  if(isObject(options)){
 
     //Callback
-    return handleCallback(callback, [response]);
+    if(options.callback !== undefined){
+        callback = options.callback;
+    }
+  }
+
+  //Handle response
+  var response = false;
+  if(xhr){
+    response = xhr.response;
+  }
+
+  //Callback
+  return handleCallback(callback, [response, xhr]);
 }
 
 function handleCallback(callback, args){
-    if(!callback){
-        return args[0];
-    }
+  if(!callback){
+      return args[0];
+  }
 
-    return callback.apply(this, args);
+  return callback.apply(this, args);
 }
 
 function exportData(data){
-    var str = toReadableString(data);
-    return prompt("", str);
+  var str = toReadableString(data);
+  return prompt("", str);
 }
 
-function downloadData(data){
-    var downloadableData = data;//Process here
-    var name = "TEST";//Add name here
-    return download(downloadableData, name, "text/txt");
+function downloadData(data, name){
+  var downloadableData = data;//Process here
+  if(!name){
+    name = "untitled";
+  }
+  return download(downloadableData, name, "text/txt");
 }
 
 function handlePrompt(handle, text, defaultText){
@@ -304,31 +660,31 @@ function getCurrentDate(){
 
 //Formatting
 function getFormattedDate(date, format){
-    //SPEC: Accepts date native obj.
+  //SPEC: Accepts date native obj.
 
-    //US
-    if(format === "us"){
-        return formatDate(date, "MM/DD/YYYY");
-    }
+  //US
+  if(format === "us"){
+      return formatDate(date, "MM/DD/YYYY");
+  }
 
-    //UK
-    else if(format === "uk"){
-        return formatDate(date, "DD/MM/YYYY");
-    }
+  //UK
+  else if(format === "uk"){
+      return formatDate(date, "DD/MM/YYYY");
+  }
 
-    //Japan
-    else if(format === "jp"){
-        return formatDate(date, "YYYY/MM/DD");
-    }
+  //Japan
+  else if(format === "jp"){
+      return formatDate(date, "YYYY/MM/DD");
+  }
 
-    //Japan kanji
-    else if(format === "jp_kanji"){
-        return formatDate(date, "YYYY年/MM月/DD日");
-    }
+  //Japan kanji
+  else if(format === "jp_kanji"){
+      return formatDate(date, "YYYY年/MM月/DD日");
+  }
 
-    else{
-        return date;
-    }
+  else{
+      return date;
+  }
 }
 
 function formatDate(date, format){
@@ -531,32 +887,32 @@ function getFullLocationPronunciation(loc, format){
 
 function getObjectNotation(obj, handle, format){
 
-    //Default
-    var target = obj;
+  //Default
+  var target = obj;
 
-    //Attempt notation
-    if(obj.notation){
-        target = obj.notation;
-    }
+  //Attempt notation
+  if(obj.notation){
+      target = obj.notation;
+  }
 
-    return handle(obj, format);
+  return handle(obj, format);
 }
 
 //DOM
 function getDOMList(arr){
-    var listEl = document.createElement("ul");
-    var itemEl;
-    var item;
+  var listEl = document.createElement("ul");
+  var itemEl;
+  var item;
 
-    for(var i=0; i<arr.length; i++){
-        item = arr[i];
+  for(var i=0; i<arr.length; i++){
+      item = arr[i];
 
-        itemEl = document.createElement("li");
-        itemEl.textContent = item;
-        listEl.appendChild(itemEl);
-    }
+      itemEl = document.createElement("li");
+      itemEl.textContent = item;
+      listEl.appendChild(itemEl);
+  }
 
-    return listEl;
+  return listEl;
 }
 
 function getDOMImage(src){
@@ -603,51 +959,25 @@ function getDOMInputRow(input){
     return rowEl;
 }
 
-//Imaging
-function drawableToDataURL(drawable){
-    var d = drawable;
+function getUserMedia(callback, constraints){
 
-    var width = d.width || d.videoWidth;
-    var height = d.height || d.videoHeight;
-
-    var c = document.createElement("canvas");
-    var ctx = c.getContext("2d");
-
-    c.width = width;
-    c.height = height;
-
-    ctx.drawImage(0, 0, width, height);
-
-    var dataURL = c.toDataURL();
-
-    return dataURL;
-}
-
-function drawableToImage(drawable){
-    var dataURL = drawableToDataURL(drawable);
-    var image = new Image();
-    image.src = dataURL;
-
-    return image;
-}
-
-function getUserMedia(callback){
-
-    var constraints = {
-        video: true,
-        audio: false
+  if(!constraints){
+    constraints = {
+      video: true,
+      audio: true
     };
+  }
+  
+  var onSuccess = function(stream){
+    callback(stream);
+  }
+  
+  var onError = function(err){
+    log(err);
+    callback(err);
+  }
 
-    var onSuccess = function(stream){
-        callback(stream);
-    }
-
-    var onError = function(err){
-        log(err);
-        callback(err);
-    }
-
-    return navigator.getUserMedia(constraints, onSuccess, onError);
+  return navigator.getUserMedia(constraints, onSuccess, onError);
 }
 
 function handleCameraStream(stream, object){
@@ -667,6 +997,30 @@ function handleCameraStream(stream, object){
     o.video.src = o.object_url;
 }
 
+function stopCameraStreamObject(o){
+  
+  //Stop Stream
+  stopCameraStream(o.stream);
+  
+  //Destroy video
+  if(o.video){
+    o.video.src = "";
+    if(o.video.parentElement){
+      o.video.parentElement.removeChild(o.video);
+    }
+  }
+
+  //Revoke URL
+  if(o.object_url){
+      window.URL.revokeObjectURL(o.object_url);
+  }
+
+  //Nullify
+  o.stream = null;
+  o.video = null;
+  o.object_url = null;
+}
+
 function stopCameraStream(stream){
     if(stream){
         return false;
@@ -679,19 +1033,6 @@ function stopCameraStream(stream){
             tracks[i].stop();
         }
     }
-
-    //Destroy video
-    //
-
-    //Revoke URL
-    if(o.object_url){
-        window.URL.revokeObjectURL(o.object_url);
-    }
-
-    //Nullify
-    o.stream = null;
-    o.video = null;
-    o.object_url = null;
 }
 
 function getStreamTracks(stream){
@@ -840,6 +1181,28 @@ function nestedInputter(obj){
   return ul;
 }
 
+function textNodesUnder(el){
+  var n, a=[], walk=document.createTreeWalker(el,NodeFilter.SHOW_TEXT, null, false);
+  while(n=walk.nextNode()) a.push(n);
+  return a;
+}
+
+function getElementsBySelectors(selectors, baseElement){
+  //Selector:
+  //https://developer.mozilla.org/en-US/docs/Learn/CSS/Introduction_to_CSS/Selectors
+  var elements = [];
+  
+  if(!baseElement){
+    baseElement = document;
+  }
+  
+  for(var i=0; i<selectors.length; i++){
+    elements = elements.concat( Array.prototype.slice.call( baseElement.querySelectorAll(selectors[i]) ) );
+  }
+  
+  return elements;
+}
+
 function getAllElements(){
   return document.body.getElementsByTagName("*");
 }
@@ -856,15 +1219,31 @@ function getElementsWithAttribute(attr){
   return filtered; 
 }
 
+function getElementAttributes(el){
+  var attr = {};
+  var nodeMap = el.attributes;
+  for(var i=0; i<nodeMap.length; i++){
+    attr[nodeMap[i].nodeName] = nodeMap[i].nodeValue;
+  }
+  
+  return attr;
+}
+
 function getElementsByAttribute(attr, value){
   return document.querySelectorAll('[' + attr + '=' + value + ']');
+}
+
+function setElementAsEditable(el, handle, bool){
+  //Sets as editable but not necessary in edit mode.
+  el.contentEditable = bool;
+  el.addEventListener("change", handle);
 }
 
 function setEditMode(attr, bool){
   var elements = getElementsWithAttribute(attr);
   var element;
 
-  for(var i=0; i<elements[i].length; i++){
+  for(var i=0; i<elements.length; i++){
     element = elements[i];
 
     //Set
@@ -872,7 +1251,7 @@ function setEditMode(attr, bool){
   }
 }
 
-function centerFixObject(el){
+function centerFixElement(el){
   var s = el.style;
   s.zIndex = Infinity;
   s.position = "fixed";
@@ -882,10 +1261,21 @@ function centerFixObject(el){
 }
 
 function loadFileInput(event, callback, options){
-  var file = event.target.files[0];
+  var file = null;
+  
+  if(!event.dataTransfer && event.target.files.length > 0){
+    file = event.target.files[0];
+  }else if(event.dataTransfer && event.dataTransfer.files.length > 0){
+    file = event.dataTransfer.files[0];
+  }
+  
   var reader = new FileReader();
   reader.onload = function(event) {
     var data = event.target.result;
+    callback(data);
+  }
+  reader.onerror = function(err){
+    console.log(err);
   }
 
   reader[options.method](file);
@@ -963,7 +1353,7 @@ function convertTabbedDataToArray(data, colCount){
 
   //Format
   var items1 = data.split(TAB);
-  //console.log(items1);
+  
   var items = [];
   for(var i=0; i<items1.length; i++){
 
@@ -985,7 +1375,7 @@ function convertTabbedDataToArray(data, colCount){
     }
 
     //Ignore mid first as already processed
-    else if(isMidStartCell){console.log("M" + i);
+    else if(isMidStartCell){
       //
     }
 
@@ -994,7 +1384,6 @@ function convertTabbedDataToArray(data, colCount){
       items.push(items1[i]);
     }
   }
-  //console.log(items);
 
   for(i=0; i<items.length; i++){
     x = Math.floor(i/colCount);
@@ -1059,4 +1448,223 @@ function loadScriptData(data, onLoad){
   document.body.appendChild(script);
 
   return script;
+}
+
+function arrayToCamelCase(arr){
+  var str = "";
+  var tempStr;
+
+  for(var i=0; i<arr.length; i++){
+    tempStr = arr[i];
+
+    if(i > 0){
+      tempStr = tempStr.substr(0, 1).toUpperCase() + tempStr.substr(1);
+    }
+
+    str+= tempStr;
+  }
+
+  return str;
+}
+
+function camelCaseToArray(str){
+  /*
+  SPEC:
+  Should be accurately reversible format:
+  1. No capital letter acronyms.
+  2. One character words possible.
+  */
+  var arr = [];
+  var cur = null;
+  
+  for(var i=0; i<str.length; i++){
+    if(cur === null){cur = 0; arr[cur] = "";}//Initialize
+    
+    if(isCapitalLetter(str[i])){
+      cur++;
+      arr[cur] = "";
+    }
+    
+    arr[cur]+= str[i];
+  }
+  
+  return arr;
+}
+
+function isCapitalLetter(char){
+  if(char && char.toUpperCase() === char){
+    return true;
+  }else{
+    return false;
+  }
+}
+
+function capitalize(str){
+  var firstChar = str.substr(0, 1);
+  var otherChars = (str.substr(1) || "");
+  
+  //Capitalize
+  firstChar = firstChar.toUpperCase();
+  
+  //Add remaining
+  str = firstChar + otherChars;
+  
+  return str;
+}
+
+function renameObjectKey(obj, oldKey, newKey){
+  if(oldKey !== newKey){
+    Object.defineProperty(oldKey, newKey,
+      Object.getOwnPropertyDescriptor(oldKey, oldKey));
+    delete oldKey[oldKey];
+  }
+}
+
+function getObjectValue(obj, pathArr){
+  return traverseObjectPath(obj, pathArr);
+}
+
+function setObjectValue(obj, pathArr, val){
+  var onLast = function(curObj, curKey, curVal){
+    curObj[curKey] = val;
+    return true;
+  };
+  return traverseObjectPath(obj, pathArr, onLast);
+}
+
+function traverseObjectPath(obj, pathArr, onLast){
+  var curObj = obj;
+  var returnVal = null;
+  for(var i=0; i<pathArr.length; i++){
+    
+    if(i+1 === pathArr.length){
+      if(onLast){
+        returnVal = onLast(curObj, pathArr[i], curObj[ pathArr[i] ]);
+      }else{
+        returnVal = curObj[ pathArr[i] ];
+      }
+    }
+    
+    else{
+      curObj = curObj[ pathArr[i] ];
+    }
+  }
+  
+  return returnVal;
+}
+
+function getKeyedData(obj, format, curPath, useSimpleKeys){
+  /*
+  Gets obj values as simple key value pairs.
+  Example: {a: {b: 2}, c: 1} => {a_b: 2, c: 1}
+  
+  Formats:
+  1. camelCase
+  2. [DELIMITER KEY]
+  */
+
+  var keys = {};
+  var curKeys;
+  var arr;
+  if(!curPath){
+    curPath = [];
+  }
+
+  //Handle
+  var setKeys = function(obj, arr, val){
+    var key, cArr;
+
+    if(useSimpleKeys){
+      //Get simpler keys for easier template creation(CAUTION: Naming conflicts more likely + Slower performance).
+      var lastIndex = arr.length - 1;
+      for(var i=lastIndex; i>=0; i--){
+        cArr = arr.slice(i, arr.length);
+        key = buildDelimiterString(cArr, format);
+        obj[key] = val;
+      }
+    }else{
+      key = buildDelimiterString(arr, format);
+      obj[key] = val;
+    }
+
+    return obj;
+  };
+
+  for(var key in obj){
+    if(isObject(obj[key])){
+      curPath.push(key);
+      curKeys = getKeyedData(obj[key], format, curPath, useSimpleKeys);
+      curPath.pop();
+    }else{
+      curKeys = {};
+      arr = [].concat(curPath);
+      arr.push(key);
+      setKeys(curKeys, arr, obj[key]);
+    }
+
+    //Add to keys
+    Object.assign(keys, curKeys);
+  }
+
+  return keys;
+}
+
+function buildDelimiterString(arr, format){
+  var cHandle = null;
+  
+  if(format === "camelCase"){
+    cHandle = arrayToCamelCase;
+  }else{
+    var del = format;
+    cHandle = function(arr){
+      return arr.join(del);
+    };
+  }
+  
+  return cHandle(arr);
+}
+
+function delimiterStringToArray(str, format){
+  var cHandle = null;
+  
+  if(format === "camelCase"){
+    cHandle = camelCaseToArray;
+  }else{
+    var del = format;
+    cHandle = function(str){
+      return str.split(del);
+    };
+  }
+  
+  return cHandle(str);
+}
+
+function removeTabIndexes(){
+  var elements = getAllElements();
+  for(var i=0; i<elements.length; i++){
+    elements[i].tabIndex = -1;
+  }
+}
+
+function setTabIndexes(elements){
+  //Sets in order
+  for(var i=0; i<elements.length; i++){
+    elements[i].tabIndex = i;
+  }
+}
+
+function getHtmlImport(selector){
+  var links = document.querySelectorAll('link[rel="import"]');
+  var element, link;
+  for(var i=0; i<links.length; i++){
+    link = links[i];
+    element = link.import.querySelector(selector);
+    if(element){
+      var clone = document.importNode(element.content, true);
+      return clone;
+    }
+  }
+  
+  //FAILED
+  return null;
 }
