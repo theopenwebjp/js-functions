@@ -1,0 +1,1 @@
+const DependentFunctions = require('../dependent-functions');

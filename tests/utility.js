@@ -1,178 +1,173 @@
-var describe = require('mocha').describe;
-var before = require('mocha').before;
-var it = require('mocha').it;
-
-//var assert = require('assert');
-var assert = require('chai').assert;
-var should = require('chai').should;
 var expect = require('chai').expect;
+var chai = require('chai');
 
-var fs = require("fs");
-eval( fs.readFileSync('./../utility.js', 'utf8') );
-
-const jsdom = require("jsdom");
-const { JSDOM } = jsdom;
-var jsDom = new JSDOM('');
-var document = jsDom.window.document;
+//var fs = require("fs");
+//eval( fs.readFileSync('./../utility.js', 'utf8') );
 
 var val;
 
+const Utility = require('../utility');
+
 describe('utility.js', function() {
-  describe('#copyVariable()', function() {
-    it('Copied values should match', function() {
-      val = copyVariable({a: 1, b: 2, c: {a: 4}}); expect(val).to.eql({a: 1, b: 2, c: {a: 4}});
-      val = copyVariable([1,2,3,7]); expect(val).to.eql([1,2,3,7]);
-      val = copyVariable(5); expect(val).to.eql(5);
-    });
-  });
-  
-  describe('#equals()', function() {
-    it('Return true on match, false on fail', function() {
-      val = equals(NaN, NaN); expect(val).to.equal(true);
-      val = equals(5, 5); expect(val).to.equal(true);
-      val = equals(3, 4); expect(val).to.equal(false);
-    });
-  });
-  
-  describe("#Traversing", function(){
-    
-    var obj = {
-      a: {
-        a: {},
-        b: null,
-        c: {
-          a: {
-            obj: 3
-          },
-          b: [
-            1,
-            2,
-            {
-              arr: 2
-            },
-            4
-          ]
-        },
-        d: 2
-      },
-      b: {}
-    };
-    var objPath = ["a", "c", "a", "obj"];
-    var arrPath = ["a", "c", "b", 2, "arr"];
-    
-    var readableObj = {
-      a: {
-        b: {
-          a: 1,
-          b: 2,
-          c: null
-        },
-        c: true
-      },
-      b: false,
-      hello: {
-        world: {
-          again: 5
-        },
-        array: [
-          2,
-          3
-        ]
-      }
-    };
-    
-    describe('#getObjectValue()', function() {
-      it('Returns value at path array', function() {
-        val = getObjectValue(obj, objPath); expect(val).to.equal(3);
-        val = getObjectValue(obj, arrPath); expect(val).to.equal(2);
-      });
+
+  describe('dataEquals', function(){
+    it('object check', function(){
+      val = Utility.dataEquals({a: 1}, {a: 1}); expect(val).to.equal(true);
+      val = Utility.dataEquals({a: 1}, {a: 2}); expect(val).to.equal(false);
+      
+      val = Utility.dataEquals([1,3,5], [1,3,5]); expect(val).to.equal(true);
+      val = Utility.dataEquals([1,3,5], [1,3,2]); expect(val).to.equal(false);
     });
 
-    describe('#setObjectValue()', function() {
-      it('Sets value at path array', function() {
-        setObjectValue(obj, objPath, 4); expect(obj.a.c.a.obj).to.equal(4);
-        setObjectValue(obj, arrPath, 4); expect(obj.a.c.b[2].arr).to.equal(4);
-      });
-    });
-    
-    describe('#loopObject()', function() {
-      it('Loops objects without complexity', function() {
-        
-        var hasVal = false;
-        
-        loopObject(readableObj, function(obj, key, val){
-          if(val === 2){hasVal = true;}
-          return val;//required
-        });
-        
-        expect(hasVal).to.equal(true);
-      });
-    });
-    
-    describe('#loopObjectComplex()', function() {
-      it('Loop object allowing any possible interaction', function() {
-        
-        var hasPath = false;
-        var hasVal = false;
-        
-        loopObjectComplex(readableObj, function(status){
-          if(status.path.length > 0){hasPath = true;}
-          if(status.value === 2){hasVal = true;}
-        });
-        
-        expect(hasPath).to.equal(true);
-        expect(hasVal).to.equal(true);
-      });
-    });
-    
-    describe('#getKeyedData()', function() {
-      it('Loops object, transforming data into key value pairs.', function() {
-        
-        val = getKeyedData(readableObj, "camelCase", null, false);//non-simple camel case
-        expect(val["helloWorldAgain"]).to.equal(5);//Object
-        //expect(val["helloArray1"]).to.equal(3);//Array(support should be added)
-        
-        val = getKeyedData(readableObj, "-", null, false);//non-simple delimiter
-        expect(val["hello-world-again"]).to.equal(5);//Others assumed same.
-        
-        val = getKeyedData(readableObj, "camelCase", null, true);//simple camel case
-        expect(val["helloWorldAgain"]).to.equal(5);//non-simple
-        expect(val["again"]).to.equal(5);//simple
-      });
-    });
-    
-  });
-  
-  describe('#isNonDomObject()', function() {
-    it('Traversible object that is not DOM type', function() {
-      expect(isNonDomObject(null)).to.equal(false);
-      expect(isNonDomObject(document.createElement("input"))).to.equal(false);
-      expect(isNonDomObject("hello")).to.equal(false);
-      expect(isNonDomObject([1, 2])).to.equal(false);
-      expect(isNonDomObject({a: 1})).to.equal(true);
+    it('non array check', function(){
+      val = Utility.dataEquals(1,1); expect(val).to.equal(true);
+      val = Utility.dataEquals(1,2); expect(val).to.equal(false);
     });
   });
-  
-  describe('#dataInArray()', function() {
+
+  describe('objectDataEquals', function(){
+    const obj1 = {
+      a: 1,
+      b: 'a',
+      c: [1,2,3],
+      d: {
+        a: [1,2,3]
+      }
+    };
+    const obj2 = {
+      a: 1,
+      b: 'a',
+      c: [1,2,3],
+      d: {
+        a: [1,2,3]
+      }
+    };
+    const obj3 = {
+      a: 1,
+      b: 'a',
+      c: [1,2,3],
+      d: {
+        a: [1,2,1]//Only here different
+      }
+    };
+    it('objects equal', function(){
+      val = Utility.objectDataEquals(obj1, obj2); expect(val).to.equal(true);
+    });
+    it('objects do not equal', function(){
+      val = Utility.objectDataEquals(obj1, obj3); expect(val).to.equal(false);
+    });
+  });
+
+  describe('cleverSlice', function(){
+    it('slices in intuitive from to way', function(){
+      const arr = [0,1,2,3,4,5];
+      val = Utility.cleverSlice(arr, 1, 3);
+      expect(val).to.deep.equal([1,2,3]);
+    });
+  });
+
+  describe('getArguments', function(){
+    it('Returns specified arguments as an array', function(){
+      var f = function(a,b,c,d){
+        return Utility.getArguments(arguments, 1, 3);
+      };
+      val = f(1,2,3,4);
+      
+      expect(val).to.deep.equal([2, 3]);
+      expect(val).to.be.an('array');
+    })
+  });
+
+  describe('combineObjects', function(){
+    it('combines multiple objects into one', function(){
+      val = Utility.combineObjects([{}, {}]);//??
+      chai.expect(val).to.equal(false);//??Check spec first.
+    });
+  });
+
+  describe('dataInArray', function() {
     it('Checks if data in array(Only looks at data not reference.)', function() {
-      val = dataInArray(2, [1,2,3]); expect(val).to.equal(true);
-      val = dataInArray(5, [1,2,3]); expect(val).to.equal(false);
-      val = dataInArray({a:1, b:2}, [1, {a:1, b:2}, 3]); expect(val).to.equal(true);
-      val = dataInArray({a:1, b:3}, [1, {a:1, b:2}, 3]); expect(val).to.equal(false);
+      val = Utility.dataInArray(2, [1,2,3]); expect(val).to.equal(true);
+      val = Utility.dataInArray(5, [1,2,3]); expect(val).to.equal(false);
+      val = Utility.dataInArray({a:1, b:2}, [1, {a:1, b:2}, 3]); expect(val).to.equal(true);
+      val = Utility.dataInArray({a:1, b:3}, [1, {a:1, b:2}, 3]); expect(val).to.equal(false);
     });
   });
-  
-  describe('#expandCommonObjectIntoObject()', function() {
-    it('Expands object/array into existing object/array', function() {
-      val = expandCommonObjectIntoObject({c: 3, d: 4}, {a: 1, b: 2});
-      expect(val).to.eql({a: 1, b: 2, c: 3, d: 4});
-      
-      val = expandCommonObjectIntoObject([3, 4], [1, 2], 2);
-      expect(val).to.eql([1,2,3,4]);
-      
-      val = expandCommonObjectIntoObject([3, 4], [1, 2], 0);
-      expect(val).to.eql([3,4,1,2]);
+
+  describe('copyVariable', function() {
+    it('Copied values should match', function() {
+      val = Utility.copyVariable({a: 1, b: 2, c: {a: 4}}); expect(val).to.eql({a: 1, b: 2, c: {a: 4}});
+      val = Utility.copyVariable([1,2,3,7]); expect(val).to.eql([1,2,3,7]);
+      val = Utility.copyVariable(5); expect(val).to.eql(5);
     });
   });
-  
+
+  describe('createMultiple', function(){
+    var obj = {
+      a: 1,
+      b: [1,2,3],
+      c: 'a'
+    };
+    val = Utility.createMultiple(obj, 5);
+    expect(val).to.deep.equal([obj, obj, obj, obj, obj]);
+  });
+
+  describe('toReadableString', function(){
+    it('Object to string', function(){
+      var obj = {a:1};
+      chai.expect(true).to.equal(false);//??Check spec first.
+    });
+
+    it('Non object to string', function(){
+      val = Utility.toReadableString(22);
+      expect(val).to.equal('22');
+    });
+  });
+
+  describe('exportData', function(){
+    it('exports', function(){
+      chai.expect(true).to.equal(false);//??Must stub window.prompt first.
+    });
+  });
+
+  describe('getSimilarity', function(){
+    it('Identical is 1', function(){
+      val = Utility.getSimilarity(2,2); expect(val).to.equal(1);
+    });
+
+    it('Number uses number similarity', function(){
+      val = Utility.getSimilarity(4,7);
+      expect(val).to.equal(Utility.getNumberSimilarity(4, 7));
+    });
+
+    it('Other uses string similarity', function(){
+      val = Utility.getSimilarity('aa', 'ccc');
+      var h = Utility.toReadableString;
+      expect(val).to.equal(Utility.getStringSimilarity(h('aa'), h('ccc')));
+    });
+  });
+
+  describe('getDataSet', function(){
+    it('Gets data set', function(){
+      chai.expect(true).to.equal(false);//??Check spec first.
+    });
+  });
+
+  describe('executeAjax', function(){
+    it('Executes AJAX properly', function(){
+      chai.expect(true).to.equal(false);//??Must stub AJAX first.
+    });
+  });
+
+  describe('getAjaxParams', function(){
+    it('Gets AJAX parameters', function(){
+      chai.expect(true).to.equal(false);//??Must stub window.encodeURIComponent first.
+    });
+  });
+
+  describe('handleAjaxResponse', function(){
+    it('Handles AJAX response', function(){
+      chai.expect(true).to.equal(false);//??Must stub AJAX first.
+    });
+  });
 });

@@ -1,0 +1,1 @@
+const JQueryFunctions = require('../jquery-functions');
