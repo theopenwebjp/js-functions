@@ -2,13 +2,16 @@
   "name": "js-functions",
   "version": "1.0.0",
   "description": "Set of general/common utility functions that can be used in JavaScript.",
-  "main": "index.js",
+  "main": "./src/index.js",
   "directories": {
     "test": "tests"
   },
   "scripts": {
-    "test": "nyc --reporter=html mocha ./tests/*.js",
-    "test-only": "mocha ./tests/*.js"
+    "test": "nyc --reporter=html mocha ./tests/*.js && npm run esdoc && npm run eslint",
+    "test-only": "mocha ./tests/*.js",
+    "esdoc": "./node_modules/.bin/esdoc -c ./.esdoc.json",
+    "eslint-old": "./node_modules/.bin/eslint ./src/**",
+    "eslint": "gulp eslint"
   },
   "repository": {
     "type": "git",
@@ -16,6 +19,12 @@
   },
   "devDependencies": {
     "chai": "^4.1.0",
+    "esdoc": "^1.0.4",
+    "esdoc-standard-plugin": "^1.0.0",
+    "eslint": "^4.12.0",
+    "eslint-html-reporter": "^0.5.2",
+    "gulp": "^3.9.1",
+    "gulp-eslint": "^4.0.0",
     "hamburgers": "^0.9.1",
     "istanbul": "^0.4.5",
     "jquery": "^3.2.1",

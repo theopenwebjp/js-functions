@@ -1,4 +1,4 @@
-const BaseObjectHelper = require('../base-object-helper');
+const BaseObjectHelper = require('../src/base-object-helper');
 
 var chai = require('chai');
 var expect = require('chai').expect;

@@ -3,6 +3,7 @@
  * Should not be dependent on code outside this file.
  */
 class BaseUtility{
+
     static getWrappedStrings(str, wrapperOpen, wrapperClose, keepWrapper, useClosingTagEnd){
         /*
         useClosingTagEnd: Allows for things like {{{a}}} > {a} instead of {a.
@@ -810,6 +811,59 @@ class BaseUtility{
       
         return info;
       }
+
+      /**
+     * Loops class functions.
+     * Class format should be es6 or similarly prototyped format.
+     * 
+     * @param {Object} classInstance 
+     * @param {Function} onFunction 
+     */
+    static loopClassFunctions(classInstance, onFunction){
+      for(let obj = classInstance;!!obj;obj = Object.getPrototypeOf(obj)){
+          for(let names = Object.getOwnPropertyNames(obj), i=0; i<names.length; i++){
+              let name = names[i];
+              if(typeof classInstance[name] === 'function'){
+                  onFunction(classInstance[name], name, classInstance);
+              }
+          }
+      }
+  }
+
+  /**
+   * Binds class instance to all functions.
+   * Used so no need to worry about using this in classes.
+   * 
+   * @param {Object} classInstance 
+   */
+  static bindClassThis(classInstance){
+      BaseUtility.loopClassFunctions(classInstance, (func, key, obj)=>{
+          obj[key] = func.bind(classInstance);
+      });
+  }
+
+  /**
+   * Automatically performs number operation on each key in object.
+   * 
+   * @param {Array} objArr Array of objects containing numbers.
+   * @return {Object} Reduced object
+   */
+  static reduceObjectArray(objArr){
+      let returnObj = {};
+      for(let i=0; i<objArr.length; i++){
+          let obj = objArr[i];
+
+          for(let key in obj){
+              if(returnObj[key] === undefined){
+                  returnObj[key] = 0;
+              }
+
+              returnObj[key]+= obj[key];
+          }
+      }
+
+      return returnObj;
+  }
 }
 
 module.exports = BaseUtility;

@@ -1,1 +1,1 @@
-const NodeFunctions = require('../node-functions');
+const NodeFunctions = require('../src/node-functions');

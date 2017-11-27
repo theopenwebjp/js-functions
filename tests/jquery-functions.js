@@ -1,1 +1,1 @@
-const JQueryFunctions = require('../jquery-functions');
+const JQueryFunctions = require('../src/jquery-functions');

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="../../">
+  <title data-ice="title">src/dependent-functions.js | js-functions</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  <script src="script/manual.js"></script>
+<meta name="description" content="Set of general/common utility functions that can be used in JavaScript."><meta property="twitter:card" content="summary"><meta property="twitter:title" content="js-functions"><meta property="twitter:description" content="Set of general/common utility functions that can be used in JavaScript."></head>
+<body class="layout-container" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+</header>
+
+<nav class="navigation" data-ice="nav"><div>
+  <ul>
+    
+  </ul>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><h1 data-ice="title">src/dependent-functions.js</h1>
+<pre class="source-code line-number raw-source-code"><code class="prettyprint linenums" data-ice="content">/*
+Functions dependent on other libraries.
+*/
+class DependentFunctions{
+
+  /**
+   * Dependency: setUriParam
+   * 
+   * @param {Array} languages
+   * @param {Object} domHelper
+   * @return {DomElement}
+   */
+  static getLanguageButtons(languages, domHelper){
+    //
+    var settings = {
+      tag: &quot;ul&quot;,
+      attributes: {class: &quot;language-buttons&quot;}
+    };
+    
+    var childrenSettings = {
+      replacements: {
+        &quot;$1&quot;: function(item, i){return item;},
+        &quot;$2&quot;: function(item, i){var str = setUriParam(location.href, &quot;language&quot;, item); return str;}
+      },
+      items: languages,
+      format: {
+        tag: &quot;li&quot;,
+        children: [{
+          tag: &quot;a&quot;,
+          attributes: {
+            href: &quot;$2&quot;
+          },
+          textContent: &quot;$1&quot;
+        }]
+      }
+    };
+    settings.children = domHelper.setChildrenSettings(settings, childrenSettings);
+    
+    var ul = domHelper.createElement(settings);
+    
+    return ul;
+  }
+  
+  /**
+   * Dependency: jQuery, Utility, ObjectHelper
+   * 
+   * @param {String} url 
+   * @param {Function} callback 
+   */
+  static getVariablesFromFile(url, callback){
+    var beforeKeys = Object.keys(window);
+    Utility.loadFile(url, function(data){
+      Utility.loadScriptData(data, function(){
+        var added = Utility.getAddedVariableNames(window, beforeKeys);
+        var variables = ObjectHelper.filterObjectVariables(obj, added);
+  
+        callback(variables);
+      });
+    });
+  }
+  
+  /**
+   * Dependency: https://github.com/derek-watson/jsUri
+   * Passes query value to function. Ex: http://domain.com?test=2 =&gt; testFunction(2);
+   * 
+   * @param {String} uri 
+   * @param {Object} actions 
+   * @return {Object}
+   */
+  static uriActionHandler(uri, actions){
+    if(!window.Uri){
+      return false;
+    }
+    var uriObj = new Uri(uri);
+  
+    var action;
+    var val;
+    var results = {};
+    
+    for(var key in actions){
+      val = uriObj.getQueryParamValue(key);
+      results[key] = actions[key](val);
+    }
+    
+    return results;
+  }
+  
+  /**
+   * Dependency: https://github.com/derek-watson/jsUri
+   * 
+   * @param {String} url 
+   * @param {*} key 
+   * @param {*} val 
+   */
+  static setUriParam(url, key, val){
+    if(!window.Uri){
+      return false;
+    }
+    var uriObj = new Uri(url);
+    
+    return uriObj.deleteQueryParam(key).addQueryParam(key, val);
+  }
+  
+  /**
+   * Dependency: https://github.com/jonsuh/hamburgers
+   * css dependency so no check.
+   * 
+   * @param {DomElement} el 
+   */
+  static setupHamburger(el){
+    var hamburger;
+    
+    //JavaScript
+    hamburger = document.querySelector(el);
+    hamburger.addEventListener(&quot;click&quot;, function() {
+      // Toggle class &quot;is-active&quot;
+      hamburger.classList.toggle(&quot;is-active&quot;);
+      // Do something else, like open/close menu
+    });
+    
+    /*
+    //jQuery
+    $hamburger = $(el);
+    $hamburger.on(&quot;click&quot;, function(e) {
+      $hamburger.toggleClass(&quot;is-active&quot;);
+      // Do something else, like open/close menu
+    });
+    */
+  }
+  
+  /**
+   * Dependency: mustache
+   * 
+   * @param {Object} data 
+   */
+  static mustachifyCurrentPage(data){
+    if(!window.Mustache){return false;}
+    
+    var el = document.body;
+    var html = el.innerHTML;
+    
+    /*
+    //Quick fix!! Forces all mustaches into no escape mustaches. Fails for loops.
+    var customTags = [ &apos;{&apos;, &apos;}&apos; ];
+    //window.Mustache.parse(html, customTags);//Method 1
+    window.Mustache.tags = customTags;//Method 2
+    */
+    window.Mustache.escapeHtml = function (text) {return text;}
+    window.Mustache.escape = function (text) {return text;}
+    
+    html = window.Mustache.render(html, data);
+    
+    el.innerHTML = html;
+    
+    return true;
+  }
+}
+
+module.exports = DependentFunctions;</code></pre>
+
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(1.0.4)</span><img src="./image/esdoc-logo-mini-black.png"></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>

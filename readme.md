@@ -26,9 +26,15 @@ Tests may be incomplete. Please run to check the status.
 An HTML coverage report will be generated in the "coverage" directory.
 
 ## Format
-
 Utility: Non dependent functions.
 Other files have dependencies stated in name of file or in code.
+
+## Documentation
+"npm run esdoc" will generate documentation. 
+https://esdoc.org/manual/config.html#full-config
+
+## Linting
+"npm run eslint" will generate linting reports.
 
 ## Installation
 

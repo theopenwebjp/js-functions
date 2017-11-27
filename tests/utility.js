@@ -6,7 +6,7 @@ var chai = require('chai');
 
 var val;
 
-const Utility = require('../utility');
+const Utility = require('../src/utility');
 
 describe('utility.js', function() {
 

@@ -1,4 +1,4 @@
-const JsFunctions = require('../index');
+const JsFunctions = require('../src/index');
 
 var chai = require('chai');
 
