@@ -10,7 +10,6 @@
     "test": "nyc --reporter=html mocha ./tests/*.js && npm run esdoc && npm run eslint",
     "test-only": "mocha ./tests/*.js",
     "esdoc": "./node_modules/.bin/esdoc -c ./.esdoc.json",
-    "eslint-old": "./node_modules/.bin/eslint ./src/**",
     "eslint": "gulp eslint"
   },
   "repository": {

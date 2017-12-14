@@ -864,6 +864,82 @@ class BaseUtility{
 
       return returnObj;
   }
+
+  /**
+   * 条件を間隔的に確認して、Trueになれば、resolveする。
+   * 
+   * @param {Function} condition Booleanを返すFunction
+   * @param {Number} pollInterval ms
+   * @return {Promise}
+   */
+  static waitFor(condition, pollInterval=50){
+    if(condition()){
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve, reject)=>{
+      let id;
+      const onEnd = ()=>{
+        window.clearInterval(id);
+        resolve();
+      };
+      id = window.setInterval(()=>{
+        if(condition()){
+          onEnd();
+        }
+      }, pollInterval);
+    });
+  }
+
+  /**
+   * Sleeps for number of ms.
+   * Does not make cpu sleep, just waits and allows other scripts to run.
+   * 
+   * @param {Number} ms milliseconds
+   * @return {Promise} 
+   */
+  static sleep(ms){
+    return new Promise((resolve)=>{
+      window.setTimeout(resolve, ms);
+    });
+  }
+
+  /**
+   * Clever event handling mechanism
+   * Detects single mode or array mode by type of events[name]
+   * Returns single or array based on single mode type
+   * 
+   * @param {Object} events 
+   * @param {String} name 
+   * @param {*} data data passed to event 
+   * @return {*} Return data(single or array)
+   */
+  static handleEvent(events, name, data=undefined){
+    const handleData = events[name];
+    
+    //No handle
+    if(!handleData){
+      return null;
+    }
+
+    //Single handle
+    else if(typeof handleData === 'function'){
+      return handleData(data);
+    }
+
+    //Multiple handle
+    else if(Array.isArray(handleData)){
+      const returnValues = handleData.map((handle)=>{
+        return handle(data);
+      });
+      return returnValues;
+    }
+
+    //Invalid
+    else{
+      return null;
+    }
+  }
 }
 
 module.exports = BaseUtility;
