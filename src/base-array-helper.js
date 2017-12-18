@@ -61,7 +61,7 @@ class BaseArrayHelper{
         var cHandle = null;
         
         if(format === "camelCase"){
-          cHandle = arrayToCamelCase;
+          cHandle = BaseArrayHelper.arrayToCamelCase;
         }else{
           var del = format;
           cHandle = function(arr){
