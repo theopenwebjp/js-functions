@@ -4,10 +4,18 @@
  */
 class BaseUtility{
 
+  /**
+   * Gets wrapped strings from string.
+   * Examples: XML TAGS <>, double quotes "", mustache {{}}...
+   * 
+   * @param {String} str 
+   * @param {String} wrapperOpen 
+   * @param {String} wrapperClose 
+   * @param {Boolean} keepWrapper Include wrapper in output
+   * @param {Boolean} useClosingTagEnd Allows for things like {{{a}}} > {a} instead of {a
+   * @return {Array} Array of detected wrapped strings
+   */
     static getWrappedStrings(str, wrapperOpen, wrapperClose, keepWrapper, useClosingTagEnd){
-        /*
-        useClosingTagEnd: Allows for things like {{{a}}} > {a} instead of {a.
-        */
         var strings = [];
         
         var status = {
@@ -52,18 +60,27 @@ class BaseUtility{
         return strings;
       }
       
+      /**
+       * For checking async functionality.
+       * Try to add randomization for better testing.
+       *  
+       * @param {Function} callback 
+       */
       static asyncCheck(callback){
-        /*
-        for checking async.
-        Try to add randomization for better testing.
-        */
-        
         var ms = Math.ceil(Math.random() * 10);
         var timer = window.setTimeout(function(){
           callback("check ok");
         }, ms);
       }
       
+      /**
+       * Turns a function handling a callback into a promise.
+       * 
+       * @param {Function} handle 
+       * @param {Array} args 
+       * @param {*} resolveIndex 
+       * @return {Promise}
+       */
       static promisify(handle, args, resolveIndex){
         var oldHandle = handle;
         handle = function(){
@@ -85,10 +102,16 @@ class BaseUtility{
         }
       }
       
+      /**
+       * Handles multiple async functions.
+       * Needs checking!!(handle, status.current positioning looks iffy.)
+       * 
+       * @param {Array} arr Array of items. See code. 
+       * @param {Function} onEnd 
+       * @return {Boolean}
+       */
       static asyncHandler(arr, onEnd){
         /*
-        Handles multiple async callbacks in order.
-        
         array item = {
           handle: null,
           args: [],
@@ -106,6 +129,8 @@ class BaseUtility{
         
         var handle = function(){
           var item = arr[status.current];
+          
+          //Finished
           if(!item){onEnd(status.returned); return false;}
           
           item.index = status.current;
@@ -119,11 +144,21 @@ class BaseUtility{
           item.handle.apply(this, item.args);
           
           status.current++;
+
+          return true;
         }
         
+        //Start execution
         return handle();
       }
       
+      /**
+       * Checks if number equals each other including NaN
+       * 
+       * @param {*} a 
+       * @param {*} b 
+       * @return {Boolean}
+       */
       static equals(a, b){
         /*
         Required because NaN !== NaN:
@@ -140,6 +175,13 @@ class BaseUtility{
         }
       }
       
+      /**
+       * Checks if 2 arrays equal eachother
+       * 
+       * @param {Array} a 
+       * @param {Array} b 
+       * @return {Boolean}
+       */
       static arrayEquals(a, b){
         if(a.length !== b.length){
           return false;
@@ -155,15 +197,33 @@ class BaseUtility{
         return true;
       }
       
+      /**
+       * Checks if no data exists
+       * Differs from falsy, as only checks for non-value data.
+       * For example "" is a valid string, 0 is a valid number, false is a valid boolean.
+       * 
+       * @param {*} data 
+       * @return {Boolean}
+       */
       static exists(data){
         //More useful data check than "==" OR !!
         return !(data === null || data === undefined);
       }
       
+      /**
+       * Asks for print. Not really needed. Should remove later.
+       * @deprecated
+       */
       static promptPrint(){
         window.print();
       }
       
+      /**
+       * Logging function
+       * 
+       * @param {*} data 
+       * @param {Object} options 
+       */
       //Handling
       static log(data, options){
         //https://developers.google.com/web/tools/chrome-devtools/console/console-write#styling_console_output_with_css
@@ -198,33 +258,67 @@ class BaseUtility{
         if(options.afterLog){options.afterLog(data);}
       }
       
+      /**
+       * Gets dataURL extension
+       * 
+       * @param {String} dataUrl 
+       * @return {String}
+       */
       static getDataUrlExtension(dataUrl){
         return dataUrl.split(";")[0].split("/")[1];
       }
       
+      /**
+       * Download data
+       * 
+       * @param {*} data 
+       * @param {String} name 
+       * @param {String} mimeType 
+       */
       static download(data, name, mimeType){
         var blob = new Blob([data], {type: mimeType});
         return BaseUtility.downloadBlob(blob, name);
       }
       
+      /**
+       * Downloads the current HTML page
+       */
       static downloadCurrentPage(){
         var data = document.documentElement.innerHTML;
         var fileName = BaseUtility.getFileName(location.href);
         return BaseUtility.download(data, fileName, "text/html");
       }
       
+      /**
+       * Gets file name from url
+       * 
+       * @param {String} url 
+       * @return {String} file name
+       */
       static getFileName(url){
         var parts = location.href.split("/");
         var name = parts[parts.length - 1] || "";
         return name;
       }
       
+      /**
+       * Gets file extension from url
+       * 
+       * @param {String} url 
+       * @return {String} file extension
+       */
       static getFileExtension(url){
         var parts = location.href.split(".");
         var ext = parts[parts.length - 1] || "";
         return ext;
       }
       
+      /**
+       * Downloads file from dataURL
+       * 
+       * @param {String} dataUrl 
+       * @param {String} name 
+       */
       static downloadDataUrl(dataUrl, name){
         var url = dataUrl.replace(/^data:image\/[^;]/, 'data:application/octet-stream');
         var extension = BaseUtility.getDataUrlExtension(dataUrl);
@@ -232,6 +326,13 @@ class BaseUtility{
         BaseUtility.downloadLink(url, fullName);
       }
       
+      /**
+       * Causes execution of blob.
+       * May be blocked by browser(especially when multiple downloads occur.)
+       * 
+       * @param {Blob} blob 
+       * @param {String} name 
+       */
       static downloadBlob(blob, name){
         //CREATE URL ELEMENT
         var url = window.URL.createObjectURL(blob);
@@ -261,6 +362,12 @@ class BaseUtility{
         return true;
       }
       
+      /**
+       * Downloads link
+       * 
+       * @param {String} url 
+       * @param {String} fullName 
+       */
       static downloadLink(url, fullName){
         //CREATE LINK
         var link = window.document.createElement('a');
@@ -283,7 +390,15 @@ class BaseUtility{
         link.parentElement.removeChild(link);
       }
       
-      static toObject(data){
+      /**
+       * Safely attempts to JSON parse data.
+       * Always returns an object.
+       * 
+       * @param {*} data JSON parseable data
+       * @param {Function} onError optional error handler
+       * @return {Object}
+       */
+      static toObject(data, onError=null){
       
         var obj = {};
       
@@ -291,12 +406,22 @@ class BaseUtility{
           var tempObj = BaseUtility.parseJson(data);
           obj = tempObj;
         }catch(err){
-          BaseUtility.log(err);
+          if(onError){
+            onError(err);
+          }
         }
       
         return obj;
       }
       
+      /**
+       * Parses JSON data that may be in JS format.
+       * Example: {a: 1} instead of {"a": 1}.
+       * Because this uses eval, should never use user entered data!
+       * 
+       * @param {String} str 
+       * @return {Object}
+       */
       static parseFuzzyJson(str){
         var obj;
         
@@ -309,16 +434,21 @@ class BaseUtility{
           }catch(err){
             obj = null;
           }finally{
-            
+            //
           }
         }
         
         return obj;
       }
       
+      /**
+       * With no errors + checks for support.
+       * Returns null on bad.
+       * 
+       * @param {String} str 
+       * @return {Object}
+       */
       static parseJson(str){
-        //With no errors + checks for support.
-        //Returns null on bad.
       
         if(!window.JSON){
           return null;
@@ -332,19 +462,32 @@ class BaseUtility{
         }
       }
       
-      static stringifyJson(json){
+      /**
+       * Attempts to stringify json object
+       * 
+       * @param {String} jsonObj 
+       * @return {String|null}
+       */
+      static stringifyJson(jsonObj){
         if(!window.JSON){
           return null;
         }
       
         try{
-          var str = JSON.stringify(json);
+          var str = JSON.stringify(jsonObj);
           return str;
         }catch(err){
           return null;
         }
       }
       
+      /**
+       * GETs multiple file data
+       * 
+       * @param {Array} urls 
+       * @param {Function} onData 
+       * @return {Promise}
+       */
       static loadFiles(urls, onData){
         var promises = [];
         for(var i=0; i<urls.length; i++){
@@ -359,6 +502,14 @@ class BaseUtility{
         return Promise.all(promises);
       }
       
+      /**
+       * GETs file data
+       * 
+       * @param {String} url 
+       * @param {Function} callback 
+       * @param {Function} onError 
+       * @return {XMLHttpRequest}
+       */
       static loadFile(url, callback, onError){
         var xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function() {
@@ -372,6 +523,12 @@ class BaseUtility{
         return xhttp;
       }
       
+      /**
+       * Handles callback for functions that may have a callback.
+       * 
+       * @param {Function} callback 
+       * @param {Array} args 
+       */
       static handleCallback(callback, args){
         if(!callback){
             return args[0];
@@ -380,6 +537,12 @@ class BaseUtility{
         return callback.apply(this, args);
       }
       
+      /**
+       * Downloads data
+       * 
+       * @param {*} data 
+       * @param {String} name 
+       */
       static downloadData(data, name){
         var downloadableData = data;//Process here
         if(!name){
@@ -388,16 +551,41 @@ class BaseUtility{
         return BaseUtility.download(downloadableData, name, "text/txt");
       }
       
+      /**
+       * Prompt handle.
+       * Probably was supposed to be async but was moved elsewhere.
+       * Should remove.
+       * 
+       * @deprecated
+       * @param {Function} handle 
+       * @param {String} text 
+       * @param {String} defaultText 
+       * @return {*}
+       */
       static handlePrompt(handle, text, defaultText){
         var value = window.prompt(text, defaultText);
         return handle(value);
       }
       
+      /**
+       * Gets current date. Not needed. Should remove.
+       * @deprecated
+       * @return {Date}
+       */
       static getCurrentDate(){
         var date = new Date();
         return date;
       }
       
+      /**
+       * Inserts delimiter at selected points in lenArr
+       * Used for things like binary data splitting etc.
+       * 
+       * @param {String} str
+       * @param {String} delimiter
+       * @param {Array} lenArr
+       * @return {String}
+       */
       static getFormattedString(str, delimiter, lenArr){
       
           //Ignore no formatting
@@ -413,7 +601,7 @@ class BaseUtility{
           for(var i=0; i<lenArr.length; i++){
       
               //Remaining digits
-              remaining = length - curIndex;
+              remaining = length - curIndex;//NOT USED
       
               //Delimiter
               if(i>0){
@@ -430,17 +618,39 @@ class BaseUtility{
           return returnStr;
       }
       
+      /**
+       * Gets current location.
+       * No need for separate function so should remove.
+       * 
+       * @deprecated
+       * @param {Function} callback 
+       */
       static getCurrentLocation(callback){
         return navigator.geolocation.getCurrentPosition(function(pos){
             callback(pos.latitude, pos.longitude);
         });
       }
       
+      /**
+       * Request current address.
+       * Not finished and too specialized. Should remove.
+       * 
+       * @deprecated
+       * @param {Function} callback 
+       */
       static requestCurrentAddress(callback){
         //SPEC: Accuracy maybe low. Requires external API.
         //
       }
       
+      /**
+       * Loads file data from input event.
+       * 
+       * @param {Object} event 
+       * @param {Function} callback 
+       * @param {Object} options 
+       * @return {FileReader}
+       */
       static loadFileInput(event, callback, options){
         var file = null;
         
@@ -464,14 +674,17 @@ class BaseUtility{
         return reader;
       }
       
+      /**
+       * Can be unaccurate in last row cell if includes line feeds.
+       * Requires col count as line feeds allowed in cells.
+       * Last cell needs to be split by lf.
+       * Uses tabbed data: From spreadsheet, HTML table, etc.
+       * 
+       * @param {String} data 
+       * @param {Number} colCount 
+       * @return {Array}
+       */
       static convertTabbedDataToArray(data, colCount){
-        /*
-        Can be unaccurate in last row cell if includes line feeds.
-        Requires col count as line feeds allowed in cells.
-        Last cell needs to be split by lf.
-        Uses tabbed data: From spreadsheet, HTML table, etc.
-        */
-      
         var arr = [];
         var TAB = "\t";
         var LF = "\n";
@@ -524,10 +737,27 @@ class BaseUtility{
         return arr;
       }
       
+      /**
+       * Replaces all occurrences of string.
+       * No native function available of time of writing.
+       * Usually done via global regex.
+       * 
+       * @param {String} str 
+       * @param {String} find 
+       * @param {String} replace 
+       * @return {String} replace complete string
+       */
       static replaceAll(str, find, replace){
         return str.split(find).join(replace);
       }
       
+      /**
+       * Loads script tag with data(js, etc.)
+       * 
+       * @param {String} data 
+       * @param {Function} onLoad 
+       * @return {DomElement} script tag
+       */
       static loadScriptData(data, onLoad){
         var script = document.createElement("script");
         script.innerHTML = data;
@@ -539,6 +769,12 @@ class BaseUtility{
         return script;
       }
       
+      /**
+       * Extracts words from camel case string.
+       * 
+       * @param {String} str 
+       * @return {Array} array of separated strings
+       */
       static camelCaseToArray(str){
         /*
         SPEC:
@@ -563,6 +799,12 @@ class BaseUtility{
         return arr;
       }
       
+      /**
+       * Checks if character is capital letter
+       * 
+       * @param {String} char 
+       * @return {Boolean}
+       */
       static isCapitalLetter(char){
         if(char && char.toUpperCase() === char){
           return true;
@@ -571,6 +813,12 @@ class BaseUtility{
         }
       }
       
+      /**
+       * Capitalize word
+       * 
+       * @param {String} str 
+       * @return {String}
+       */
       static capitalize(str){
         var firstChar = str.substr(0, 1);
         var otherChars = (str.substr(1) || "");
@@ -584,6 +832,13 @@ class BaseUtility{
         return str;
       }
       
+      /**
+       * Gets index of value from variable that could be following: String, Number, Array, Object
+       * 
+       * @param {*} data 
+       * @param {*} find value searching for.
+       * @return {*} index(String or Number)
+       */
       static getIndexOf(data, find){
         //Allows using object
         var index = -1;
@@ -606,6 +861,13 @@ class BaseUtility{
         return index;
       }
       
+      /**
+       * Gets array of delimited string items
+       * 
+       * @param {String} str 
+       * @param {String} format camelCase, any delimiter.
+       * @return {Array} array of delimited strings
+       */
       static delimiterStringToArray(str, format){
         var cHandle = null;
         
@@ -621,6 +883,13 @@ class BaseUtility{
         return cHandle(str);
       }
       
+      /**
+       * Gets string similarity(0~1)
+       * 
+       * @param {String} str1 
+       * @param {String} str2 
+       * @return {Number}
+       */
       static getStringSimilarity(str1, str2){
         /*
         Positive:
@@ -642,10 +911,16 @@ class BaseUtility{
         return ((inclusion1 + inclusion2 + size) / 3);
       }
       
+      /**
+       * Tests how closely str1 is included in str2.
+       * Checking every permutation would be most accurate but would be severely risky on larger strings.
+       * 
+       * @param {String} str1 
+       * @param {String} str2 
+       * @return {Number} (0~1)
+       */
       static getStringInclusionWeight(str1, str2){
-        //Tests how closely str1 is included in str2.
-        //Checking every permutation would be most accurate but would be severely risky on larger strings.
-        var foundStr = "";
+        //var foundStr = "";
         var cur;
         
         for(var i=str1.length; i>=1; i--){
@@ -657,6 +932,13 @@ class BaseUtility{
         return weight;
       }
       
+      /**
+       * Gets number similarity (0~1)
+       * 
+       * @param {Number} num1 
+       * @param {Number} num2 
+       * @return {Number}
+       */
       static getNumberSimilarity(num1, num2){
         var max = BaseUtility.getMax(num1, num2);
         var min = BaseUtility.getMin(num1, num2);
@@ -665,22 +947,34 @@ class BaseUtility{
         return (min/max);
       }
       
-      static getMax(){
+      /**
+       * Gets max number from unlimited number of parameters
+       * 
+       * @param {Array} args Array of numbers 
+       * @return {Number}
+       */
+      static getMax(...args){
         var max = null;
-        for(var i=0; i<arguments.length; i++){
-          if(max === null || arguments[i] > max){
-            max = arguments[i];
+        for(var i=0; i<args.length; i++){
+          if(max === null || args[i] > max){
+            max = args[i];
           }
         }
         
         return max;
       }
       
-      static getMin(){
+      /**
+       * Gets min number from unlimited number of parameters
+       * 
+       * @param {Array} args Array of numbers 
+       * @return {Number}
+       */
+      static getMin(...args){
         var min = null;
-        for(var i=0; i<arguments.length; i++){
-          if(min === null || arguments[i] < min){
-            min = arguments[i];
+        for(var i=0; i<args.length; i++){
+          if(min === null || args[i] < min){
+            min = args[i];
           }
         }
         
@@ -705,6 +999,14 @@ class BaseUtility{
         return returnStr;
       }
       
+      /**
+       * Checks if is native function.
+       * Native functions can not be accessed in certain ways.
+       * For example, the contents can not be viewed.
+       * 
+       * @param {Function} func 
+       * @return {Boolean}
+       */
       static isNativeFunction(func){
         var str = func.toString();
         var trimmedStr = BaseUtility.removeNonCharacters(str);
@@ -713,11 +1015,13 @@ class BaseUtility{
         return (trimmedStr.substr(-expected.length, expected.length) === expected) ? true: false;
       }
       
+      /**
+       * Takes functions(probably dependent on eachother)
+       * and outputs string that can be copy + pasted.
+       * @param {Array} funcs array of functions
+       * @return {String}
+       */
       static buildFunctionModule(funcs){
-        /*
-        Takes functions(probably dependent on eachother) and outputs string that can be copy + pasted.
-        */
-        
         var str = "";
         var func;
         for(var i=0; i<funcs.length; i++){
@@ -731,8 +1035,12 @@ class BaseUtility{
         return str;
       }
       
+      /**
+       * Usage: For distinguishing between log/non-log functions such as disallowing/allowing logging.
+       * @param {Function} func 
+       * @return {Boolean}
+       */
       static isLogFunction(func){
-        //Usage: For distinguishing between log/non-log functions such as disallowing/allowing logging.
         var logFunctions = [
           window.alert
         ];
@@ -749,6 +1057,11 @@ class BaseUtility{
         return (logFunctions.indexOf(func) >= 0) ? true : false;
       }
       
+      /**
+       * Gets stack info
+       * Gets standard info from error object + more.
+       * @return {Object} info
+       */
       static getStackInfo(){
         var info = {
           error: null,
