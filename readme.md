@@ -49,3 +49,9 @@ No special setup required. Just add js code into your own project.
 Damien Golding
 
 ## Supporters
+
+## To Do
+* mocha-phantomjs resulting in parse error even though works directly in browser(Probably due to old phantomjs version not supporting es2015).  
+Tried following but got "An error occurred trying to launch phantomjs at ..."  
+-p ./node_modules/phantomjs/bin/phantomjs  
+-p ./node_modules/.bin/phantomjs  

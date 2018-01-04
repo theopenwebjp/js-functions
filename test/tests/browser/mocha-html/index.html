@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Mocha browser tests</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./vendor/mocha.css" />
+  </head>
+  <body>
+    <div id="mocha"></div>
+    <script src="./vendor/mocha.js"></script>
+    <script>mocha.setup("bdd");</script>
+    <script src="./vendor/chai.js"></script>
+
+    <!-- TESTS START -->
+    <script src="../dist/bundle.test.js"></script>
+    
+    <!--
+    <script src="../tests/base-array-helper.js"></script>
+    <script src="../tests/base-object-helper.js"></script>
+    <script src="../tests/base-utility.js"></script>
+    <script src="../tests/dependent-functions.js"></script>
+    <script src="../tests/index.js"></script>
+    <script src="../tests/jquery-functions.js"></script>
+    <script src="../tests/utility.js"></script>
+    -->
+    <!-- TESTS END -->
+    
+    <script>
+      window.addEventListener('load', function(){mocha.run();});
+    </script>
+  </body>
+</html>

@@ -1,1 +1,0 @@
-const BaseArrayHelper = require('../src/base-array-helper');

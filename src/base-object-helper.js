@@ -1,9 +1,14 @@
 class BaseObjectHelper{
+
+    /**
+     * Copies data without references.
+     * Not perfect solution, but is most basic.
+     * var copy = Object.assign({}, obj);//seems to keep inner references.
+     * Does not work for circular references.
+     * Does not work for __proto__ inheriting variables(Usually native class objects) and functions.   
+     * @param {Object} obj 
+     */
     static copyObject(obj){
-        //var copy = Object.assign({}, obj);//seems to keep inner references.
-        
-        //Does not work for circular references.
-        //Does not work for __proto__ inheriting variables(Usually native class objects) and functions.
         var copy = {};
         
         try{
@@ -15,8 +20,13 @@ class BaseObjectHelper{
         return copy;
       }
       
+      /**
+       * For extracting shallow data from object.
+       * 
+       * @param {Object} obj 
+       * @return {Object} shallow copy
+       */
       static copyObjectData(obj){
-        //For extracting shallow data.
         var copy = {};
         for(var key in obj){
           if(!BaseObjectHelper.isCommonObject(obj[key])){
@@ -27,6 +37,15 @@ class BaseObjectHelper{
         return copy;
       }
       
+      /**
+       * Applies shallow object data one way between objects.
+       * Allows for conditional handling.
+       * 
+       * @param {Object} from 
+       * @param {Object} to 
+       * @param {Object} condition (key, from, to)=>{return boolean;}
+       * @return {Object} to
+       */
       static applyObj(from, to, condition){
       
         //Check
@@ -48,6 +67,13 @@ class BaseObjectHelper{
         return to;
       }
       
+      /**
+       * Gets value at index of keys in object.
+       * 
+       * @param {Object} obj 
+       * @param {*} index 
+       * @return {Object} {key: key, value: val}
+       */
       static getObjectKeyValueAtIndex(obj, index){
         var keys = Object.keys(obj);
         var keyValue = {
@@ -61,6 +87,14 @@ class BaseObjectHelper{
         return keyValue;
       }
       
+      /**
+       * Same keys as in: for(var key in obj)
+       * As opposed to usual Object.keys.
+       * Does not use hasOwnProperty
+       * 
+       * @param {Object} obj 
+       * @return {Array} array of keys
+       */
       static getObjectKeys(obj){
         //Same keys as in: for(var key in obj).
         //Does not use hasOwnProperty.
@@ -73,9 +107,16 @@ class BaseObjectHelper{
         return keys;
       }
     
+      /**
+       * Expands and inserts data of common object into common object.
+       * Common object: Array or normal object
+       * 
+       * @param {Array|Object} obj 
+       * @param {Array|Object} parentObj 
+       * @param {*} insertIndex 
+       * @return {Array|Object} parentObj
+       */
       static expandCommonObjectIntoObject(obj, parentObj, insertIndex){
-        //Expands and inserts data of object into object.
-        
         var key, i;
         if(Array.isArray(parentObj)){
           for(i=0; i<obj.length; i++){
@@ -92,9 +133,16 @@ class BaseObjectHelper{
         return parentObj;
       }
       
+      /**
+       * Deletes object property
+       * Handles array or obj because indexing similar
+       * Array treating prop as value but object as key!! Inconsistent!! Should remove.
+       * 
+       * @deprecated
+       * @param {Object} obj 
+       * @param {*} prop 
+       */
       static deleteObjectProperty(obj, prop){
-        //Handles array or obj because indexing similar.
-        
         if(Array.isArray(obj)){
           var index = obj.indexOf(prop);
           if(index >= 0){
@@ -105,6 +153,12 @@ class BaseObjectHelper{
         }
       }
     
+      /**
+       * Log each element in object on single line.
+       * Naming confusing, should change!!
+       * 
+       * @param {Object} obj 
+       */
       static logObjectOnSingleLine(obj){
         var str = "";
         var LF = "\n";
@@ -115,8 +169,13 @@ class BaseObjectHelper{
         console.log(str);
       }
     
+      /**
+       * Checks if is object of map style.
+       * 
+       * @param {Object} obj 
+       * @return {Boolean}
+       */
       static isObject(obj){
-        //object that can be traversed
         if(
           typeof obj === "object" &&
           obj !== null &&
@@ -128,6 +187,12 @@ class BaseObjectHelper{
         }
       }
       
+      /**
+       * Checks if is map object but not from DOM.
+       * 
+       * @param {Object} obj 
+       * @return {Boolean}
+       */
       static isNonDomObject(obj){
         if(BaseObjectHelper.isObject(obj) && !obj.nodeType){
           return true;
@@ -136,24 +201,27 @@ class BaseObjectHelper{
         }
       }
       
+      /**
+       * Checks if is traversible object(map object or array)
+       * 
+       * @param {Object} obj 
+       * @return {Boolean}
+       */
       static isCommonObject(obj){
-        //Traversible object or array
         return (BaseObjectHelper.isObject(obj) || Array.isArray(obj));
       }
     
-      static objectToObjectInfoArray(obj, curDepth){
-        /*
-        Object with possible nesting => array of objects with information.
-        */
-      
+      /**
+       * Object with possible nesting => array of objects with information.
+       * 
+       * @param {Object} obj 
+       * @param {Number} curDepth 
+       * @return {Array}
+       */
+      static objectToObjectInfoArray(obj, curDepth=1){
         var arr = [];
         var temp;
         var val;
-      
-        //Default depth
-        if(!curDepth){
-          curDepth = 1;
-        }
       
         for(var key in obj){
       
@@ -173,6 +241,14 @@ class BaseObjectHelper{
         return arr;
       }
       
+      /**
+       * Information about object value
+       * 
+       * @param {Number} depth Starting at 1
+       * @param {*} key 
+       * @param {*} value 
+       * @return {ObjectInfo}
+       */
       static ObjectInfo(depth, key, value){
         return {
           depth: curDepth,
@@ -181,6 +257,13 @@ class BaseObjectHelper{
         };
       }
     
+      /**
+       * Diff(added) of object keys
+       * 
+       * @param {Object} obj 
+       * @param {Array} beforeKeys 
+       * @return {Array} added keys
+       */
       static getAddedVariableNames(obj, beforeKeys){
         var afterKeys = Object.keys(obj);
         var added = [];
@@ -193,6 +276,13 @@ class BaseObjectHelper{
         return added;
       }
       
+      /**
+       * Diff(removed) of object keys
+       * 
+       * @param {Object} obj 
+       * @param {Array} beforeKeys 
+       * @return {Array} removed keys       
+       */
       static getRemovedVariableNames(obj, beforeKeys){
         var afterKeys = Object.keys(obj);
         var removed = [];
@@ -205,6 +295,13 @@ class BaseObjectHelper{
         return removed;
       }
       
+      /**
+       * Returns object with only desired keys
+       * 
+       * @param {Object} obj 
+       * @param {Array} keys 
+       * @return {Object}
+       */
       static filterObjectVariables(obj, keys){
         var filtered = {};
         for(var i=0; i<keys.length; i++){
@@ -214,12 +311,24 @@ class BaseObjectHelper{
         return filtered;
       }
       
+      /**
+       * Globalizes(sets to window) all shalow data in object
+       * 
+       * @param {Object} obj 
+       */
       static globalize(obj){
         for(var key in obj){
           window[key] = obj[key];
         }
       }
     
+      /**
+       * Rename object key
+       * 
+       * @param {Object} obj 
+       * @param {String} oldKey 
+       * @param {String} newKey 
+       */
       static renameObjectKey(obj, oldKey, newKey){
         if(oldKey !== newKey){
           Object.defineProperty(obj, newKey, Object.getOwnPropertyDescriptor(obj, oldKey));
@@ -227,6 +336,13 @@ class BaseObjectHelper{
         }
       }
     
+      /**
+       * Diffs 2 objects and gets object of change information
+       * 
+       * @param {Object} oldObj 
+       * @param {Object} newObj 
+       * @return {Object} Changes. See source.
+       */
       static getKeyChanges(oldObj, newObj){
         /*
         Also array allowed. Anything with keys ok.
@@ -262,6 +378,14 @@ class BaseObjectHelper{
         return changes;
       }
     
+      /**
+       * Object to readable string.
+       * Should make as readable as possible.
+       * 
+       * @param {Object} obj 
+       * @param {Function} onError 
+       * @return {String}
+       */
       static objectToReadableString(obj, onError=null){//??Make actually readable
         var str = "";
         try{
@@ -278,6 +402,15 @@ class BaseObjectHelper{
         return str;
       }
       
+      /**
+       * Starts watching object property.
+       * Returns object for handling watching including stopping watching.
+       * 
+       * @param {Object} obj 
+       * @param {*} key 
+       * @param {Object} options 
+       * @return {Object} watch object
+       */
       static watchObjectProperty(obj, key, options={}){
         /*
         Usage:

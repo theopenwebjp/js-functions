@@ -102,7 +102,8 @@ class Utility extends BaseUtility{
   }
 
   /**
-   * Gets Arguments as Array
+   * Gets Arguments as Array.
+   * Arguments from "arguments" are not a real array. Slice fixes this.
    * 
    * @param {Object} args Arguments Object similar to array 
    * @param {*} from 
@@ -114,13 +115,27 @@ class Utility extends BaseUtility{
     return Utility.cleverSlice(args, from, to);
   }
 
-  static combineObjects(args){//Multiple objects//??Why using getArguments
+  /**
+   * Combines array of objects into one.
+   * 
+   * @param {Array} args Array, but may be arguments list(why here?). Multiple objects.
+   * @return {Object}
+   */
+  static combineObjects(args){//Multiple ob
     args = Utility.getArguments(args);
     args = [{}].concat(args);//Array of objects
     
     return Object.assign.apply(Object, args);
   }
 
+  /**
+   * Checks if data in array.
+   * Checks data only, not reference equality.
+   * 
+   * @param {*} data 
+   * @param {Array} arr 
+   * @return {Boolean}
+   */
   static dataInArray(data, arr){
     for(var i=0; i<arr.length; i++){
       if(Utility.dataEquals(data, arr[i])){
@@ -132,7 +147,14 @@ class Utility extends BaseUtility{
     return false;
   }
 
-  static copyVariable(variable, keepReferences){
+  /**
+   * Copies variable regardless of type
+   * 
+   * @param {*} variable 
+   * @param {Boolean} keepReferences 
+   * @return {*} copied variable
+   */
+  static copyVariable(variable, keepReferences=false){
     var copy = null;
     if(BaseObjectHelper.isObject(variable)){
       if(keepReferences){
@@ -153,7 +175,15 @@ class Utility extends BaseUtility{
     return copy;
   }
 
-  static createMultiple(variable, count, keepReferences){
+  /**
+   * Creates multiple of single variable
+   * 
+   * @param {*} variable 
+   * @param {Number} count How many to make(integer)
+   * @param {Boolean} keepReferences 
+   * @return {Array} array of copies
+   */
+  static createMultiple(variable, count, keepReferences=false){
     var arr = [];
     for(var i=0; i<count; i++){
       arr.push( Utility.copyVariable(variable, keepReferences) );
@@ -162,6 +192,12 @@ class Utility extends BaseUtility{
     return arr;
   }
 
+  /**
+   * Converts any variable to a readable string.
+   * 
+   * @param {*} data 
+   * @return {String}
+   */
   static toReadableString(data){
     
       //Default
@@ -178,11 +214,23 @@ class Utility extends BaseUtility{
       return str;
     }
 
+    /**
+     * Exports data to browser UI as readable value.
+     * 
+     * @param {*} data 
+     */
     static exportData(data){
       var str = Utility.toReadableString(data);
       return window.prompt("", str);
     }
 
+    /**
+     * Gets similarity of variable(0~1)
+     * 
+     * @param {*} var1 
+     * @param {*} var2 
+     * @return {Number}
+     */
     static getSimilarity(var1, var2){
       if(var1 === var2){
         return 1;
@@ -200,6 +248,14 @@ class Utility extends BaseUtility{
       return Utility.getStringSimilarity(var1, var2);
     }
 
+    /**
+     * Gets data set for sending to server.
+     * JQuery handles all this automatically so use JQuery ajax, post, get instead.
+     * 
+     * @deprecated
+     * @param {*} data 
+     * @return {Object}
+     */
     static getDataSet(data){
       //SPEC: Makes sure format is ok for server.
     
@@ -210,9 +266,16 @@ class Utility extends BaseUtility{
       return data;
     }
   
+    /**
+     * Executes ajax.
+     * See getDataSet for deprecation info.
+     * 
+     * @deprecated
+     * @param {Object} dataSet dataSet is simple obj  with key/value pairs.
+     * @param {String} url 
+     * @param {Object} options 
+     */
     static executeAjax(dataSet, url, options){
-      //SPEC: dataSet is simple obj  with key/value pairs.
-    
       //Default
       //
     
@@ -247,6 +310,13 @@ class Utility extends BaseUtility{
       return xhr.send(params);
     }
     
+    /**
+     * Creates AJAX parameters from object of key value pairs.
+     * Just need to attach to end of GET URL(example@domain.com?[ADD HERE])
+     * 
+     * @param {Object} obj 
+     * @return {String}
+     */
     static getAjaxParams(obj){
     
       var params = "";
@@ -265,6 +335,14 @@ class Utility extends BaseUtility{
       return params;
     }
     
+    /**
+     * Handles response from AJAX.
+     * See getDataSet for deprecation info.
+     * 
+     * @deprecated
+     * @param {XMLHttpRequest} xhr 
+     * @param {Object} options 
+     */
     static handleAjaxResponse(xhr, options){
     
       //Not finished

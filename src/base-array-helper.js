@@ -1,5 +1,13 @@
 class BaseArrayHelper{
-    static searchObjectArray(arr, key, val){
+      /**
+       * Searches object array for value.
+       * 
+       * @param {Array} arr 
+       * @param {String} key 
+       * @param {*} val 
+       * @return {Array} array of objects with match
+       */
+      static searchObjectArray(arr, key, val){
         var found = [];
         var obj;
         for(var i=0; i<arr.length; i++){
@@ -13,10 +21,17 @@ class BaseArrayHelper{
         return found;
       }
     
-      static singleDimensionArrayToObject(arr){
+      /**
+       * Converts 1d array to object.
+       * Array values are used as keys, values are set with defaultVal.
+       * 
+       * @param {Array} arr 
+       * @return {String} defaultVal
+       * @return {Object}
+       */
+      static singleDimensionArrayToObject(arr, defaultVal=''){
         var obj = {};
         var key;
-        var defaultVal = "";
         for(var i=0; i<arr.length; i++){
           key = arr[i];
           obj[key] = defaultVal;
@@ -25,12 +40,15 @@ class BaseArrayHelper{
         return obj;
       }
       
+      /**
+       * Converts 2d array to array of objects.
+       * Useful for settings using objects: [[1,2,3,4], ...], ["a","b","c","d"] => [{a: 1, b: 2, c: 3, d: 4}, ...]
+       * 
+       * @param {Array} arr 
+       * @param {Array} keys 
+       * @return {Array}
+       */
       static arrayListToObjectList(arr, keys){
-        /*
-        Converts 2d array to array of objects.
-        Useful for settings using objects: [[1,2,3,4], ...],["a","b","c","d"] => [{a: 1, b: 2, c: 3, d: 4}, ...]
-        */
-        
         return arr.map(function(val){
           var obj = {};
           for(var i=0; i<val.length; i++){
@@ -40,6 +58,12 @@ class BaseArrayHelper{
         });
       }
     
+      /**
+       * Converts array of words to camel case string
+       * 
+       * @param {Array} arr 
+       * @return {String}
+       */
       static arrayToCamelCase(arr){
         var str = "";
         var tempStr;
@@ -57,6 +81,13 @@ class BaseArrayHelper{
         return str;
       }
     
+      /**
+       * Builds string from array + format
+       * 
+       * @param {Array} arr 
+       * @param {String} format 
+       * @return {String}
+       */
       static buildDelimiterString(arr, format){
         var cHandle = null;
         
@@ -72,6 +103,12 @@ class BaseArrayHelper{
         return cHandle(arr);
       }
     
+      /**
+       * Creates unique array
+       * 
+       * @param {Array} arr 
+       * @return {Array}
+       */
       static uniqueArray(arr) {
         function onlyUnique(value, index, self) { 
           return self.indexOf(value) === index;

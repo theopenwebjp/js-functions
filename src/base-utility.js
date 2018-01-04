@@ -800,7 +800,8 @@ class BaseUtility{
       }
       
       /**
-       * Checks if character is capital letter
+       * Checks if character is capital letter.
+       * Will be true for non-ascii-letters.
        * 
        * @param {String} char 
        * @return {Boolean}
@@ -920,7 +921,7 @@ class BaseUtility{
        * @return {Number} (0~1)
        */
       static getStringInclusionWeight(str1, str2){
-        //var foundStr = "";
+        var foundStr = "";
         var cur;
         
         for(var i=str1.length; i>=1; i--){
