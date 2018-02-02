@@ -1262,7 +1262,7 @@ class BaseUtility{
    * @param {String} url 
    * @return {Promise}
    */
-  urlToBlob(url){
+  static urlToBlob(url){
     return new Promise((resolve, reject)=>{
       try {
           const xhr = new XMLHttpRequest();
