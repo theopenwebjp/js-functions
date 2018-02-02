@@ -74,7 +74,7 @@ describe('base-object-helper.js', function(){
       const keyVal = BaseObjectHelper.getObjectKeyValueAtIndex(obj, index);
       chai.expect(keyVal).to.deep.equal({
         key: 'c',
-        value: obj[c]
+        value: obj.c
       });
     });
   });

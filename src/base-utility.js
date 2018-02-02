@@ -1254,6 +1254,40 @@ class BaseUtility{
       return null;
     }
   }
+
+  /**
+   * Converts URL to blob.
+   * Should work on any kind of media.
+   * 
+   * @param {String} url 
+   * @return {Promise}
+   */
+  urlToBlob(url){
+    return new Promise((resolve, reject)=>{
+      try {
+          const xhr = new XMLHttpRequest();
+          xhr.open("GET", url);
+          xhr.responseType = "blob";
+          xhr.onerror = function() {
+            reject("xhr error");
+          };
+          xhr.onload = function() {
+            const OK = 200;
+            if(xhr.status === OK)
+            {
+              resolve(xhr.response);
+            }
+            else{
+              reject("xhr status error:" + xhr.statusText);
+            }
+          };
+          xhr.send();
+      }
+      catch(err) {
+        reject(err.message);
+      }
+    });
+  }
 }
 
 module.exports = BaseUtility;

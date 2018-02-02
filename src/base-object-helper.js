@@ -251,9 +251,9 @@ class BaseObjectHelper{
        */
       static ObjectInfo(depth, key, value){
         return {
-          depth: curDepth,
+          depth: depth,
           key: key,
-          value: val
+          value: value
         };
       }
     
