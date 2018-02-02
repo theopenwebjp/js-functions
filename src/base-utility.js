@@ -1264,6 +1264,27 @@ class BaseUtility{
    */
   static urlToBlob(url){
     return new Promise((resolve, reject)=>{
+      
+      //HTML5(DataURL)
+      if(url.substr(0, 'data:'.length) === 'data:' && window.ArrayBuffer && window.Uint8Array){
+        //example:
+        //data:image/png;base64,iVBORw0....
+        const byteString = atob(url.split(',')[1]);
+        const mimeString = url.split(',')[0]//data:image/png;base64
+        .split(':')[1]//image/png;base64
+        .split(';')[0];//image/png
+
+        const arrayBuffer = new ArrayBuffer(byteString.length);
+        const intArray = new Uint8Array(arrayBuffer);
+        for (let i = 0; i < byteString.length; i++) {
+          intArray[i] = byteString.charCodeAt(i);
+        }
+        
+        const blob = new Blob([arrayBuffer], {type: mimeString});
+        return resolve(blob);
+      }
+
+      //Fallback(but may be blocked)
       try {
           const xhr = new XMLHttpRequest();
           xhr.open("GET", url);
