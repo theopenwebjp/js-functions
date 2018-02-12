@@ -1309,6 +1309,34 @@ class BaseUtility{
       }
     });
   }
+
+  /**
+   * Sets timeout.
+   * For promises.
+   * Reports as soon as timeout ends.
+   * Caution: Difficult to cancel out of promise, so only should be used for reporting and where can let promise finish.
+   * timeout(promise, 1000).catch(console.error);
+   * 
+   * @param {Number} ms 
+   * @return {Promise}
+   * @see https://stackoverflow.com/questions/21485545/is-there-a-way-to-tell-if-an-es6-promise-is-fulfilled-rejected-resolved?noredirect=1&lq=1
+   * @see https://stackoverflow.com/questions/35716275/how-to-tell-if-a-promise-is-resolved
+   */
+  static timeout(promise, ms){
+
+    return new Promise((resolve, reject)=>{
+      const onEnd = (data)=>{
+        resolve(data);
+      };
+
+      const onTimeout = ()=>{
+        reject('timed out');
+      };
+
+      promise.then(onEnd);
+      sleep(ms).then(onTimeout);
+    });
+  }
 }
 
 module.exports = BaseUtility;
