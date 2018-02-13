@@ -1351,7 +1351,6 @@ class BaseUtility{
       return new Promise((resolve)=>{
         let bool = false;
         promise.then(()=>{
-          console.log(promise);
           bool = true;
         });
         window.setTimeout(()=>{resolve(bool);}, 1);
