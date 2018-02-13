@@ -1337,6 +1337,44 @@ class BaseUtility{
       sleep(ms).then(onTimeout);
     });
   }
+
+  /**
+   * Gets array of promises by status from array.
+   * Main use is for early exit of Promise.all where need to get what completed.
+   * @param {Array} promises 
+   * @param {Boolean} resolved (resolved = true. rejected = false)
+   * @return {Promise} resolves array of promises
+   */
+  static getPromisesByState(promises, resolved=false){
+    
+    const checkPromise = (promise)=>{
+      return new Promise((resolve)=>{
+        let bool = false;
+        promise.then(()=>{
+          console.log(promise);
+          bool = true;
+        });
+        window.setTimeout(()=>{resolve(bool);}, 1);
+      });
+    };
+
+    const checkPromises = [];
+    promises.forEach((promise)=>{
+      checkPromises.push(checkPromise(promise));
+    });
+
+    return Promise.all(checkPromises)
+    .then((boolArr)=>{
+      const resolvedPromises = [];
+      boolArr.forEach((bool, index)=>{
+        if(resolved === bool){
+          resolvedPromises.push(promises[index]);
+        }
+      });
+
+      return resolvedPromises;
+    });
+  }
 }
 
 module.exports = BaseUtility;
