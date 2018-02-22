@@ -268,4 +268,71 @@ describe('base-utility.js', function(){
         });
       });
 
+      describe('promiseAll', function(){
+        it('resolves promises unordered', ()=>{
+          const h1 = ()=>{return Promise.resolve(1);};
+          const h2 = ()=>{return Promise.resolve(2);};
+          const h3 = ()=>{return Promise.resolve(3);};
+          const handles = [h1, h2, h3];
+
+          return BaseUtility.promiseAll(handles, false)
+          .then((arr)=>{
+            chai.expect(arr).to.deep.equal([1,2,3]);
+          });
+        });
+
+        it('resolves promises ordered', ()=>{
+          const t = (num, ms, total=0)=>{
+            return new Promise((resolve, reject)=>{
+              window.setTimeout(()=>{
+                resolve(num + total);
+              }, ms);
+            });
+          };
+
+          const h1 = ()=>{return t(1, 100);};
+          const h2 = (a)=>{return t(2, 10, a);};
+          const h3 = (b)=>{return t(3, 50, b);};
+          const handles = [h1, h2, h3];
+
+          return BaseUtility.promiseAll(handles, true)
+          .then((arr)=>{
+            chai.expect(arr).to.deep.equal([1,(1+2),(1+2+3)]);
+          });
+        });
+      });
+
+      describe.skip('loadStyleSheets', function(){
+        it('loads unordered', ()=>{
+          //BaseUtility.loadStyleSheets(array, false);
+        });
+
+        it('loads ordered', ()=>{
+          //Need to test different speed css.
+        });
+      });
+
+      describe('loadScripts', function(){
+        it('loads unordered', ()=>{
+          const src1 = BaseUtility.createDataURI('window._a = true;');
+          const src2 = BaseUtility.createDataURI('window._b = true;');
+          return BaseUtility.loadScripts([src1, src2], false)
+          .then(()=>{
+            chai.expect(window._a).to.equal(true);
+            chai.expect(window._b).to.equal(true);
+          });
+        });
+
+        it.skip('loads ordered', ()=>{
+          //Need to test different speed scripts.
+        });
+      });
+
+      describe('createDataURI', function(){
+        it('creates data URI as expected: Hello World! => SGVsbG8gV29ybGQh', ()=>{
+          //https://www.base64encode.org/
+          const str = BaseUtility.createDataURI('Hello World!', mimeType='text/plain', {charset:'utf-8'});
+          chai.expect(str).to.equal('data:text/plain;charset=utf-8;base64,SGVsbG8gV29ybGQh');
+        });
+      });
 });

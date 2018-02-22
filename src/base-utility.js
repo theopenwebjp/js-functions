@@ -750,6 +750,60 @@ class BaseUtility{
       static replaceAll(str, find, replace){
         return str.split(find).join(replace);
       }
+
+      /**
+       * Loads style sheet
+       * @param {Array} arr 
+       * @param {Boolean} ordered default false because order not usually important.
+       * @return {Promise}
+       */
+      static loadStyleSheets(arr, ordered=false){
+        const getLoadStyleSheetHandle = (src)=>{
+          return new Promise((resolve, reject)=>{
+            const link = document.createElement('link');
+            link.setAttribute('rel', 'stylesheet');
+            link.setAttribute('href', src);
+
+            document.body.appendChild(link);
+            
+            if(link.onload !== undefined){
+              link.addEventListener('load', resolve);
+              link.addEventListener('error', reject);
+            }else{
+              resolve();
+            }
+          });
+        };
+        const h = getLoadStyleSheetHandle;
+
+        const handles = arr.map(src => h(src));
+        return BaseUtility.promiseAll(handles, ordered);
+      }
+
+      /**
+       * Loads scripts(Injects script tag into DOM)
+       * @param {Array} arr 
+       * @param {Boolean} ordered
+       * @return {Promise}
+       */
+      static loadScripts(arr, ordered=true){
+        const getLoadScriptHandle = (src)=>{
+          return new Promise((resolve, reject)=>{
+            const script = document.createElement('script');
+            script.setAttribute('type', 'text/javascript');
+            script.setAttribute('src', src);
+
+            document.body.appendChild(script);
+            
+            script.addEventListener('load', resolve);
+            script.addEventListener('error', reject);
+          });
+        };
+        const h = getLoadScriptHandle;
+
+        const handles = arr.map(src => h(src));
+        return BaseUtility.promiseAll(handles, ordered);
+      }
       
       /**
        * Loads script tag with data(js, etc.)
@@ -760,6 +814,7 @@ class BaseUtility{
        */
       static loadScriptData(data, onLoad){
         var script = document.createElement("script");
+        script.setAttribute('type', 'text/javascript');
         script.innerHTML = data;
         script.addEventListener("load", function(){
           if(onLoad){onLoad(script);}
@@ -1373,6 +1428,59 @@ class BaseUtility{
 
       return resolvedPromises;
     });
+  }
+
+  /**
+   * Simple abstraction of Promise.all that takes handles instead and allows sequential execution.
+   * 
+   * @param {Array} arr array of functions
+   * @param {Boolean} ordered Whether to execute handles sequentially or in any order(fastest).
+   * @return {Promise}
+   */
+  static promiseAll(arr, ordered=false){
+    if(ordered){
+      if(arr.length === 0){
+        Promise.resolve([]);
+      }
+
+      let p = Promise.resolve();
+      arr.forEach((handle)=>{
+        p = p.then(handle);
+      });
+      return p;
+    }else{
+      const promises = [];
+      handles.forEach((handle)=>{
+        const promise = handle();
+        promises.push(promise);
+      });
+      return Promise.all(promises);
+    }
+  }
+
+  /**
+   * Creates a data URI
+   * 
+   * @param {String} data 
+   * @param {String} mimeType 
+   * @param {Object} options optional data outputted in format key=value;
+   * @return {String}
+   */
+  static createDataURI(data, mimeType='text/plain', options={}){
+    data = btoa(data);
+
+    let str = 'data:';
+    str+= `${mimeType};`;
+
+    for(let key in options){
+      str+= `${key}=${options[key]};`;
+    }
+
+    str+= 'base64,';
+
+    str+= `${data};`;
+
+    return str;
   }
 }
 
