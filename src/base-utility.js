@@ -754,12 +754,13 @@ class BaseUtility{
       /**
        * Loads style sheet
        * @param {Array} arr 
-       * @param {Object} options
+       * @param {Object} optionsAbstract
        * @return {Promise}
        */
-      static loadStyleSheets(arr, options){
+      static loadStyleSheets(arr, optionsAbstract){
         //Deprecated: @param {Boolean} ordered default false because order not usually important.
-        const ordered = (typeof options === 'boolean' ? options : options.ordered) || false;
+        const options = (typeof optionsAbstract === 'object' ? optionsAbstract : {});
+        const ordered = (typeof optionsAbstract === 'boolean' ? optionsAbstract : options.ordered) || false;
         const parent = options.parent || document.body;
 
         const getLoadStyleSheetHandle = (src)=>{
@@ -787,11 +788,12 @@ class BaseUtility{
       /**
        * Loads scripts(Injects script tag into DOM)
        * @param {Array} arr 
-       * @param {Object} options
+       * @param {Object} optionsAbstract
        * @return {Promise}
        */
-      static loadScripts(arr, options){
-        const ordered = (typeof options === 'boolean' ? options : options.ordered) || true;
+      static loadScripts(arr, optionsAbstract){
+        const options = (typeof optionsAbstract === 'object' ? optionsAbstract : {});
+        const ordered = (typeof optionsAbstract === 'boolean' ? optionsAbstract : options.ordered) || true;
         const parent = options.parent || document.body;
 
         const getLoadScriptHandle = (src)=>{
