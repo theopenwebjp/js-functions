@@ -1457,7 +1457,7 @@ class BaseUtility{
       return p;
     }else{
       const promises = [];
-      handles.forEach((handle)=>{
+      arr.forEach((handle)=>{
         const promise = handle();
         promises.push(promise);
       });
