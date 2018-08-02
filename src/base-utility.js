@@ -753,7 +753,7 @@ class BaseUtility{
 
       /**
        * Loads style sheet
-       * @param {Array} arr 
+       * @param {Array} arr array of link href urls.
        * @param {Object} optionsAbstract
        * @return {Promise}
        */
@@ -781,13 +781,15 @@ class BaseUtility{
         };
         const h = getLoadStyleSheetHandle;
 
-        const handles = arr.map(src => h(src));
+        const handles = arr.map((src)=>{
+          return ()=>{return h(src);};
+        });
         return BaseUtility.promiseAll(handles, ordered);
       }
 
       /**
        * Loads scripts(Injects script tag into DOM)
-       * @param {Array} arr 
+       * @param {Array} arr array of script src urls.
        * @param {Object} optionsAbstract
        * @return {Promise}
        */
@@ -810,7 +812,9 @@ class BaseUtility{
         };
         const h = getLoadScriptHandle;
 
-        const handles = arr.map(src => h(src));
+        const handles = arr.map((src)=>{
+          return ()=>{return h(src);};
+        });
         return BaseUtility.promiseAll(handles, ordered);
       }
       
@@ -1442,7 +1446,7 @@ class BaseUtility{
   /**
    * Simple abstraction of Promise.all that takes handles instead and allows sequential execution.
    * 
-   * @param {Array} arr array of functions
+   * @param {Array} arr array of functions that should return promises.
    * @param {Boolean} ordered Whether to execute handles sequentially or in any order(fastest).
    * @return {Promise}
    */
