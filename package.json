@@ -13,10 +13,6 @@
     "esdoc": "./node_modules/.bin/esdoc -c ./.esdoc.json",
     "eslint": "gulp eslint"
   },
-  "repository": {
-    "type": "git",
-    "url": "E:/damien/repo/public/js-functions.git"
-  },
   "devDependencies": {
     "browserify": "^14.5.0",
     "chai": "^4.1.0",
