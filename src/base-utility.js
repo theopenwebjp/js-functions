@@ -754,17 +754,21 @@ class BaseUtility{
       /**
        * Loads style sheet
        * @param {Array} arr 
-       * @param {Boolean} ordered default false because order not usually important.
+       * @param {Object} options
        * @return {Promise}
        */
-      static loadStyleSheets(arr, ordered=false){
+      static loadStyleSheets(arr, options){
+        //Deprecated: @param {Boolean} ordered default false because order not usually important.
+        const ordered = (typeof options === 'boolean' ? options : options.ordered) || false;
+        const parent = options.parent || document.body;
+
         const getLoadStyleSheetHandle = (src)=>{
           return new Promise((resolve, reject)=>{
             const link = document.createElement('link');
             link.setAttribute('rel', 'stylesheet');
             link.setAttribute('href', src);
 
-            document.body.appendChild(link);
+            parent.appendChild(link);
             
             if(link.onload !== undefined){
               link.addEventListener('load', resolve);
@@ -783,17 +787,20 @@ class BaseUtility{
       /**
        * Loads scripts(Injects script tag into DOM)
        * @param {Array} arr 
-       * @param {Boolean} ordered
+       * @param {Object} options
        * @return {Promise}
        */
-      static loadScripts(arr, ordered=true){
+      static loadScripts(arr, options){
+        const ordered = (typeof options === 'boolean' ? options : options.ordered) || true;
+        const parent = options.parent || document.body;
+
         const getLoadScriptHandle = (src)=>{
           return new Promise((resolve, reject)=>{
             const script = document.createElement('script');
             script.setAttribute('type', 'text/javascript');
             script.setAttribute('src', src);
 
-            document.body.appendChild(script);
+            parent.appendChild(script);
             
             script.addEventListener('load', resolve);
             script.addEventListener('error', reject);
