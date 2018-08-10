@@ -1495,6 +1495,35 @@ class BaseUtility{
 
     return str;
   }
+
+  /**
+   * Compares a to b using comparator.
+   * Used mainly for numbers, but usable on any variable, and is of use for strings too.
+   * @param {*} a 
+   * @param {*} b 
+   * @param {String} comparator <= < = > >=
+   */
+  static compare(a, b, comparator='='){
+    switch(comparator){
+      case '=':
+      return a === b;
+      
+      case '<':
+      return a < b;
+
+      case '<=':
+      return a <= b;
+
+      case '>':
+      return a > b;
+
+      case '>=':
+      return a >= b;
+
+      default:
+      return false;
+    }
+  }
 }
 
 module.exports = BaseUtility;
