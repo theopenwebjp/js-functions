@@ -1576,6 +1576,62 @@ class BaseUtility {
         return false
     }
   }
+
+  /**
+   * Checks if string is minimized.
+   * Can estimate if code is minimized.
+   * Has margin of error so returns object with information and estimated boolean.
+   * Space ratio: <2% <5% <10% Most likely minimized. >10% Most likely not minimized.
+   * @param {String} str
+   * @return {Object}
+   */
+  static isMinimzed(str){
+    /*
+    NOTES
+    Other possible ways of detecting being minimized:
+    Length of variables.
+    Ratio of characters to lines.
+    */
+
+    //Ranges in percentages
+    const ranges = [
+      {key: 'VERY_LIKELY', val: 2},
+      {key: 'LIKELY', val: 5},
+      {key: 'PROBABLY', val: 10},
+      {key: 'MAYBE', val: 15},
+      {key: 'UNLIKELY', val: Infinity}
+    ]
+    const HIGHEST_TRUE_INDEX = 1//LIKELY. Set low to make sure properly minimized.
+
+    const getCount = (src, find)=>{
+      return src.split(find).length - 1;
+    }
+    const wsCount = getCount(str, ' ')
+    const charCount = str.length
+
+    const percentage = (wsCount/charCount) * 100
+
+    let firstPassIndex = null
+    ranges.forEach((range, index)=>{
+      if(firstPassIndex !== null){
+        return
+      }
+
+      if(percentage < range.val){
+        firstPassIndex = index
+      }
+    })
+    const level = ranges[firstPassIndex].key
+    const bool = firstPassIndex <= HIGHEST_TRUE_INDEX
+
+    const returnObject = {
+      percentage: percentage,
+      level: level,
+      bool: bool
+    }
+
+    return returnObject
+  }
 }
 
 if (typeof window === 'object') {
