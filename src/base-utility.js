@@ -1585,7 +1585,7 @@ class BaseUtility {
    * @param {String} str
    * @return {Object}
    */
-  static isMinimzed(str){
+  static isMinimzed (str) {
     /*
     NOTES
     Other possible ways of detecting being minimized:
@@ -1593,7 +1593,7 @@ class BaseUtility {
     Ratio of characters to lines.
     */
 
-    //Ranges in percentages
+    // Ranges in percentages
     const ranges = [
       {key: 'VERY_LIKELY', val: 2},
       {key: 'LIKELY', val: 5},
@@ -1601,23 +1601,23 @@ class BaseUtility {
       {key: 'MAYBE', val: 15},
       {key: 'UNLIKELY', val: Infinity}
     ]
-    const HIGHEST_TRUE_INDEX = 1//LIKELY. Set low to make sure properly minimized.
+    const HIGHEST_TRUE_INDEX = 1// LIKELY. Set low to make sure properly minimized.
 
-    const getCount = (src, find)=>{
-      return src.split(find).length - 1;
+    const getCount = (src, find) => {
+      return src.split(find).length - 1
     }
     const wsCount = getCount(str, ' ')
     const charCount = str.length
 
-    const percentage = (wsCount/charCount) * 100
+    const percentage = (wsCount / charCount) * 100
 
     let firstPassIndex = null
-    ranges.forEach((range, index)=>{
-      if(firstPassIndex !== null){
+    ranges.forEach((range, index) => {
+      if (firstPassIndex !== null) {
         return
       }
 
-      if(percentage < range.val){
+      if (percentage < range.val) {
         firstPassIndex = index
       }
     })
@@ -1631,6 +1631,32 @@ class BaseUtility {
     }
 
     return returnObject
+  }
+
+  /**
+   * Checks for URL hash change including existing hash in URL at time of execution.
+   * @param {String} value
+   * @param {Function} func
+   */
+  static watchForHashValue (value, func) {
+    const getUrlHash = (url) => {
+      let hashStr = (new window.URL(url)).hash
+      return (hashStr.length > 0) ? hashStr.substr(1) : ''
+    }
+
+    const check = (url) => {
+      if (getUrlHash(url) === value) {
+        func()
+      }
+    }
+
+    // Immediate
+    check(window.location.href)
+
+    // Future
+    window.addEventListener('hashchange', function (event) {
+      check(event.newURL)
+    })
   }
 }
 
