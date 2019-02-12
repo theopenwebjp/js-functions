@@ -88,7 +88,7 @@ class BaseUtility {
     var oldHandle = handle
     handle = function () {
       var oldCallback = args[resolveIndex]
-      var promise = new Promise(function (resolve, reject) {
+      var promise = new Promise(function (resolve) {
         args[resolveIndex] = function () {
           resolve.apply(this, arguments)
         }
@@ -286,7 +286,9 @@ class BaseUtility {
    * @param {String} mimeType
    */
   static download (data, name, mimeType) {
-    var blob = new window.Blob([data], { type: mimeType })
+    var blob = new window.Blob([data], {
+      type: mimeType
+    })
     return BaseUtility.downloadBlob(blob, name)
   }
 
@@ -306,7 +308,7 @@ class BaseUtility {
    * @return {String} file name
    */
   static getFileName (url) {
-    var parts = window.location.href.split('/')
+    var parts = url.split('/')
     var name = parts[parts.length - 1] || ''
     return name
   }
@@ -318,7 +320,7 @@ class BaseUtility {
    * @return {String} file extension
    */
   static getFileExtension (url) {
-    var parts = window.location.href.split('.')
+    var parts = url.split('.')
     var ext = parts[parts.length - 1] || ''
     return ext
   }
@@ -376,6 +378,7 @@ class BaseUtility {
   /**
    * Downloads link
    * CAUTION. Not working for cross domain urls.
+   * CAUTION. Max 10 downloads at once(occurred in Chrome).
    *
    * @param {String} url
    * @param {String} fullName
@@ -503,7 +506,7 @@ class BaseUtility {
     var promises = []
     for (var i = 0; i < urls.length; i++) {
       promises.push(
-        new Promise(function (resolve, reject) {
+        new Promise(function (resolve) {
           BaseUtility.loadFile(urls[i], function (data) {
             if (onData) {
               data = onData(data)
@@ -532,6 +535,7 @@ class BaseUtility {
         callback(xhttp.response)
       }
     }
+    xhttp.onerror(onError)
     xhttp.open('GET', url, true)
     xhttp.send()
 
@@ -645,18 +649,6 @@ class BaseUtility {
   }
 
   /**
-   * Request current address.
-   * Not finished and too specialized. Should remove.
-   *
-   * @deprecated
-   * @param {Function} callback
-   */
-  static requestCurrentAddress (callback) {
-    // SPEC: Accuracy maybe low. Requires external API.
-    //
-  }
-
-  /**
    * Loads file data from input event.
    *
    * @param {Object} event
@@ -716,8 +708,7 @@ class BaseUtility {
       isStartCell = i === 0
       isLastCell = i + 1 === items1.length
       isFirstEndCell = !isLastCell && i === firstEndCellIndex
-      isMidEndCell =
-        !isLastCell && !isStartCell && !isFirstEndCell && midCellColOver === 0
+      isMidEndCell = !isLastCell && !isStartCell && !isFirstEndCell && midCellColOver === 0
 
       if (
         isFirstEndCell || // row 1
@@ -1255,9 +1246,7 @@ class BaseUtility {
   static loopClassFunctions (classInstance, onFunction) {
     for (let obj = classInstance; obj; obj = Object.getPrototypeOf(obj)) {
       for (
-        let names = Object.getOwnPropertyNames(obj), i = 0;
-        i < names.length;
-        i++
+        let names = Object.getOwnPropertyNames(obj), i = 0; i < names.length; i++
       ) {
         let name = names[i]
         if (typeof classInstance[name] === 'function') {
@@ -1277,6 +1266,27 @@ class BaseUtility {
     BaseUtility.loopClassFunctions(classInstance, (func, key, obj) => {
       obj[key] = func.bind(classInstance)
     })
+  }
+
+  static applyStaticFunctions (classInstance, constructor) {
+    const staticFunctions = BaseUtility.getStaticFunctions(constructor)
+    for (let key in staticFunctions) {
+      classInstance[key] = staticFunctions[key]
+    }
+  }
+
+  static getStaticFunctionNames (constructor) {
+    return Object.getOwnPropertyNames(constructor)
+    .filter(prop => typeof constructor[prop] === 'function')
+  }
+
+  static getStaticFunctions (constructor) {
+    const names = BaseUtility.getStaticFunctionNames(constructor)
+    const functions = {}
+    names.forEach(name => {
+      functions[name] = constructor[name]
+    })
+    return functions
   }
 
   /**
@@ -1314,7 +1324,7 @@ class BaseUtility {
       return Promise.resolve()
     }
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       let id
       const onEnd = () => {
         window.clearInterval(id)
@@ -1376,6 +1386,42 @@ class BaseUtility {
   }
 
   /**
+   * Merges events based on handleEvent format.
+   * @param {Object} events1
+   * @param {Object} events2
+   * @return {Object} merged events object
+   */
+  static mergeEventsObject (events1, events2) {
+    const events = {}
+    const forceArray = val => {
+      // Standardize empty
+      if(!val){
+        val = []
+      }
+
+      // Standardize single
+      if(!Array.isArray(val)){
+        val = [val]
+      }
+
+      return val
+    }
+    const mergeEvents = (from, to) => {
+      for(let key in from){
+        const fromEvents = forceArray(from[key])
+        to[key] = forceArray(to[key])
+        
+        fromEvents.forEach(event => [
+          to[key].push(event)
+        ])
+      }
+    }
+    mergeEvents(events1, events)
+    mergeEvents(events2, events)
+    return events
+  }
+
+  /**
    * Converts URL to blob.
    * Should work on any kind of media.
    *
@@ -1404,7 +1450,9 @@ class BaseUtility {
           intArray[i] = byteString.charCodeAt(i)
         }
 
-        const blob = new window.Blob([arrayBuffer], { type: mimeString })
+        const blob = new window.Blob([arrayBuffer], {
+          type: mimeString
+        })
         return resolve(blob)
       }
 
@@ -1594,14 +1642,28 @@ class BaseUtility {
     */
 
     // Ranges in percentages
-    const ranges = [
-      {key: 'VERY_LIKELY', val: 2},
-      {key: 'LIKELY', val: 5},
-      {key: 'PROBABLY', val: 10},
-      {key: 'MAYBE', val: 15},
-      {key: 'UNLIKELY', val: Infinity}
+    const ranges = [{
+      key: 'VERY_LIKELY',
+      val: 2
+    },
+    {
+      key: 'LIKELY',
+      val: 5
+    },
+    {
+      key: 'PROBABLY',
+      val: 10
+    },
+    {
+      key: 'MAYBE',
+      val: 15
+    },
+    {
+      key: 'UNLIKELY',
+      val: Infinity
+    }
     ]
-    const HIGHEST_TRUE_INDEX = 1// LIKELY. Set low to make sure properly minimized.
+    const HIGHEST_TRUE_INDEX = 1 // LIKELY. Set low to make sure properly minimized.
 
     const getCount = (src, find) => {
       return src.split(find).length - 1
@@ -1657,6 +1719,119 @@ class BaseUtility {
     window.addEventListener('hashchange', function (event) {
       check(event.newURL)
     })
+  }
+
+  /**
+   * Scans string with function and returns results
+   * @param {String} string
+   * @param {Function} checker (char)=>{}
+   * @return {Array} Results array each with format({startIndex, endIndex, value})
+   */
+  static scanString (string, checker) {
+    const newStatus = () => {
+      return {
+        startIndex: null,
+        endIndex: null,
+        value: ''
+      }
+    }
+    const resultsArray = []
+    const length = string.length
+    let status = newStatus()
+    let index = 0
+    for (; index <= length; index++) {
+      let char = string[index]
+
+      let bool = checker(char, status)
+      if (bool) {
+        resultsArray.push(status)
+        status = newStatus()
+      }
+    }
+
+    // Unfinished status
+    if (status.startIndex !== null) {
+      status.endIndex = index
+      resultsArray.push(status)
+    }
+
+    return resultsArray
+  }
+
+  /**
+   * Replaces a string with values between specified start and end indexes.
+   * This function aims to replace multiple parts of a same string string quickly.
+   * Ranges of indexes should NOT overlap.
+   * @param {String} string
+   * @param {Array} indexes
+   * @param {Boolean} sortRequired If false, expects "start" index from low to high.
+   * @return {String} replaced string
+   */
+  static replaceStringIndexes (string, indexes = [], sortRequired = true) {
+    const VALUE_KEY = 0
+    const START_INDEX_KEY = 1
+    const END_INDEX_KEY = 2
+
+    if (sortRequired) {
+      indexes.sort((a, b) => {
+        if (a[START_INDEX_KEY] < b[START_INDEX_KEY]) {
+          return 1
+        } else {
+          return -1
+        }
+      })
+    }
+
+    const length = indexes.length
+    let indexInfo
+    let replacedString = ''
+    let startIndex = 0
+    for (let i = 0; i < length; i++) {
+      indexInfo = indexes[i]
+
+      let endIndex = indexInfo[START_INDEX_KEY]//??END_INDEX_KEY check!!
+      let value = indexInfo[VALUE_KEY]
+      replacedString += string.substring(startIndex, endIndex) + value // Not including end index
+
+      // Update next start index
+      startIndex = endIndex + 1
+    }
+
+    // Remaining
+    if (startIndex < string.length) {
+      replacedString += string.substr(startIndex)
+    }
+
+    return replacedString
+  }
+
+  /**
+   * Replaces string between start and end index range(including start and end).
+   * Usually faster than replacing with string.replace.
+   * @param {String} string
+   * @param {String} replacer
+   * @param {Number} startIndex
+   * @param {Number} endIndex
+   * @return {String}
+   */
+  static replaceAt (string, replacer, startIndex, endIndex) {
+    return string.substring(0, startIndex) + replacer + string.substring(endIndex)
+  }
+
+  /**
+   * Generate random string
+   * @param {Number} length
+   * @return {String}
+   */
+  static generateRandomString (length = 0) {
+    let string = ''
+    var allowed = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+
+    for (let i = 0; i < length; i++) {
+      string += allowed.charAt(Math.floor(Math.random() * allowed.length))
+    }
+
+    return string
   }
 }
 
