@@ -5,13 +5,16 @@
 Set of general functions that can be used in JavaScript.
 May include stand-alone functions.
 
+No dependencies are expected to load this library.
+Some dependencies my be expected for certain functions(jquery and dependent function files).
+Node.js have been moved to a separate repository due to need for node based dependencies.
+
 Functions may be broken up into classes over time.
 Functions may be made into modular(js modules) code over time.
 Should not be too complex. If deep dependencies are desired, then create another Utility class dependent on this module.
 
 Base files should have no dependencies.
 utility: Dependent on window/DOM browser environment.
-node-functions: Dependent on Node environment.
 
 THIS LIBRARY IS MEANT AS A SMALL LIBRARY FOR UTILITY FUNCTIONS.
 IT SHOULD NOT INCLUDE ANY DEPENDENDENCIES OTHER THAN devDependencies.
