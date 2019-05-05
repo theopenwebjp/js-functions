@@ -535,7 +535,9 @@ class BaseUtility {
         callback(xhttp.response)
       }
     }
-    xhttp.onerror(onError)
+    if (onError) {
+      xhttp.addEventListener('error', onError)
+    }
     xhttp.open('GET', url, true)
     xhttp.send()
 
@@ -1277,7 +1279,7 @@ class BaseUtility {
 
   static getStaticFunctionNames (constructor) {
     return Object.getOwnPropertyNames(constructor)
-    .filter(prop => typeof constructor[prop] === 'function')
+      .filter(prop => typeof constructor[prop] === 'function')
   }
 
   static getStaticFunctions (constructor) {
@@ -1395,22 +1397,22 @@ class BaseUtility {
     const events = {}
     const forceArray = val => {
       // Standardize empty
-      if(!val){
+      if (!val) {
         val = []
       }
 
       // Standardize single
-      if(!Array.isArray(val)){
+      if (!Array.isArray(val)) {
         val = [val]
       }
 
       return val
     }
     const mergeEvents = (from, to) => {
-      for(let key in from){
+      for (let key in from) {
         const fromEvents = forceArray(from[key])
         to[key] = forceArray(to[key])
-        
+
         fromEvents.forEach(event => [
           to[key].push(event)
         ])
@@ -1789,7 +1791,7 @@ class BaseUtility {
     for (let i = 0; i < length; i++) {
       indexInfo = indexes[i]
 
-      let endIndex = indexInfo[START_INDEX_KEY]//??END_INDEX_KEY check!!
+      let endIndex = indexInfo[START_INDEX_KEY] // ??END_INDEX_KEY check!!
       let value = indexInfo[VALUE_KEY]
       replacedString += string.substring(startIndex, endIndex) + value // Not including end index
 
