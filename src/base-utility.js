@@ -785,6 +785,23 @@ class BaseUtility {
     })
   }
 
+  static getLoadTemplateHandle (src, parent) {
+    return new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.setAttribute('rel', 'import')
+      link.setAttribute('href', src)
+
+      parent.appendChild(link)
+
+      if (link.onload !== undefined) {
+        link.addEventListener('load', resolve)
+        link.addEventListener('error', reject)
+      } else {
+        resolve()
+      }
+    })
+  }
+
   /**
    * Loads array of url data with custom handle for handling urls
    * @param {Array} arr array of link href urls.
@@ -811,7 +828,7 @@ class BaseUtility {
   /**
    * Loads array of url data with css or js
    * @param {Array} arr array of link href urls.
-   * @param {Object} options
+   * @param {Object} options See loadAbstractUrls
    * @return {Promise}
    */
   static loadDependencyUrls (arr, options = {}) {
@@ -820,6 +837,8 @@ class BaseUtility {
         return BaseUtility.getLoadScriptHandle(src, parent)
       } else if (src.substr(-'.css'.length) === '.css') {
         return BaseUtility.getLoadStyleSheetHandle(src, parent)
+      } else if (src.substr(-'.html'.length) === '.html') {
+        return BaseUtility.getLoadTemplateHandle(src, parent)
       } else {
         return Promise.reject(
           new Error(`Invalid extension used for source: ${src}`)
