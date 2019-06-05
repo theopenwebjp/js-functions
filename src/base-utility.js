@@ -212,6 +212,34 @@ class BaseUtility {
     return !(data === null || data === undefined)
   }
 
+  static buildMediaQuery (dimensions) {
+    var d = dimensions
+    var parts = []
+    if (BaseUtility.exists(d.width) && BaseUtility.exists(d.width.min)) {
+      parts.push('min-width: ' + d.width.min + 'px')
+    }
+    if (BaseUtility.exists(d.width) && BaseUtility.exists(d.width.max)) {
+      parts.push('max-width: ' + d.width.max + 'px')
+    }
+    if (BaseUtility.exists(d.height) && BaseUtility.exists(d.height.min)) {
+      parts.push('min-height: ' + d.height.min + 'px')
+    }
+    if (BaseUtility.exists(d.height) && BaseUtility.exists(d.height.max)) {
+      parts.push('max-height: ' + d.height.max + 'px')
+    }
+
+    var query = ''
+    for (var i = 0; i < parts.length; i++) {
+      if (i > 0) {
+        query += ' AND '
+      }
+
+      query += '(' + parts[i] + ')'
+    }
+
+    return query
+  }
+
   /**
    * Asks for print. Not really needed. Should remove later.
    * @deprecated
