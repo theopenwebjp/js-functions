@@ -1294,6 +1294,11 @@ class BaseUtility {
    */
   static loopClassFunctions (classInstance, onFunction) {
     for (let obj = classInstance; obj; obj = Object.getPrototypeOf(obj)) {
+      // obj returning function under certain circumstances and leading to arguments being referenced below.
+      // This causes an error in strict mode, so check added below.
+      if (!obj || typeof obj === 'function') {
+        continue
+      }
       for (
         let names = Object.getOwnPropertyNames(obj), i = 0; i < names.length; i++
       ) {
@@ -1881,6 +1886,28 @@ class BaseUtility {
     }
 
     return string
+  }
+
+  /**
+   * Fixes a tag security issues:
+   * rel="noopener noreferrer"
+   * @see https://developers.google.com/web/tools/lighthouse/audits/noopener
+   */
+  static fixPageAnchorTagSecurity () {
+    const anchorList = [...document.querySelectorAll('a')]
+    anchorList.forEach(a => {
+      BaseUtility.setSpaceDelimitedElementAttribute(a, 'rel', ['noopener', 'noreferrer'])
+    })
+  }
+
+  static setSpaceDelimitedElementAttribute (element, attribute, values = []) {
+    let attributeValues = element.getAttribute(attribute).split(' ')
+    values.forEach(value => {
+      if (!attributeValues.includes(value)) {
+        attributeValues.push(value)
+      }
+    })
+    element.setAttribute(attributeValues.join(' '))
   }
 }
 
