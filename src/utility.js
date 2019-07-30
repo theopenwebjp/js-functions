@@ -18,7 +18,7 @@ class Utility extends BaseUtility {
    * @return {Boolean}
    */
   static dataEquals (a, b) {
-    if (BaseObjectHelper.isObject(a) && BaseObjectHelper.isObject(b)) {
+    if (BaseObjectHelper.isCommonObject(a) && BaseObjectHelper.isCommonObject(b)) {
       return Utility.objectDataEquals(a, b)
     } else {
       return BaseUtility.equals(a, b)
@@ -53,12 +53,8 @@ class Utility extends BaseUtility {
       }
 
       // Value check
-      if (BaseObjectHelper.isObject(a[key])) {
+      if (BaseObjectHelper.isCommonObject(a[key])) {
         if (!Utility.objectDataEquals(a[key], b[key], looped)) {
-          return false
-        }
-      } else if (Array.isArray(a[key])) {
-        if (!BaseUtility.arrayEquals(a[key], b[key])) {
           return false
         }
       } else {
@@ -97,8 +93,8 @@ class Utility extends BaseUtility {
    * Arguments from "arguments" are not a real array. Slice fixes this.
    *
    * @param {Object} args Arguments Object similar to array
-   * @param {*} from
-   * @param {*} to
+   * @param {Number} from
+   * @param {Number} to
    * @return {Array}
    */
   static getArguments (args, from, to) {
@@ -113,7 +109,7 @@ class Utility extends BaseUtility {
    * @return {Object}
    */
   static combineObjects (args) { // Multiple ob
-    args = Utility.getArguments(args)
+    args = Utility.getArguments(args, 0, args.length > 0 ? args.length - 1 : 0)
     args = [{}].concat(args)// Array of objects
 
     return Object.assign.apply(Object, args)

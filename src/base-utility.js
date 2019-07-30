@@ -18,8 +18,8 @@ class BaseUtility {
     str,
     wrapperOpen,
     wrapperClose,
-    keepWrapper,
-    useClosingTagEnd
+    keepWrapper = null,
+    useClosingTagEnd = null
   ) {
     var strings = []
 
@@ -81,7 +81,7 @@ class BaseUtility {
    *
    * @param {Function} handle
    * @param {Array} args
-   * @param {*} resolveIndex
+   * @param {number} resolveIndex
    * @return {Promise}
    */
   static promisify (handle, args, resolveIndex) {
@@ -178,7 +178,8 @@ class BaseUtility {
   }
 
   /**
-   * Checks if 2 arrays equal eachother
+   * Checks if 2 arrays equal eachother in value(NOT REFERENCE).
+   * DOES NOT WORK ON NESTED ARRAYS. USE Utility.objectDataEquals for that.
    *
    * @param {Array} a
    * @param {Array} b
@@ -249,14 +250,13 @@ class BaseUtility {
   }
 
   /**
-   * Logging function
+   * Logging function that won't cause error if does not exist, and includes some options.
    *
    * @param {*} data
-   * @param {Object} options
+   * @param {Object} options See link
+   * @see https://developers.google.com/web/tools/chrome-devtools/console/console-write#styling_console_output_with_css
    */
-  // Handling
-  static log (data, options) {
-    // https://developers.google.com/web/tools/chrome-devtools/console/console-write#styling_console_output_with_css
+  static log (data, options = null) {
     if (!options) {
       options = {
         prettify: false,
@@ -331,14 +331,15 @@ class BaseUtility {
 
   /**
    * Gets file name from url
+   * Does not distinguish file extensions.
    *
    * @param {String} url
    * @return {String} file name
    */
   static getFileName (url) {
-    var parts = url.split('/')
-    var name = parts[parts.length - 1] || ''
-    return name
+    return url.split('#').shift() // No fragment
+      .split('?').shift() // No arguments
+      .split('/').pop() // Only last route
   }
 
   /**
@@ -556,7 +557,7 @@ class BaseUtility {
    * @param {Function} onError
    * @return {XMLHttpRequest}
    */
-  static loadFile (url, callback, onError) {
+  static loadFile (url, callback, onError = null) {
     var xhttp = new window.XMLHttpRequest()
     xhttp.onreadystatechange = function () {
       if (this.readyState === 4 && this.status === 200) {
@@ -909,7 +910,7 @@ class BaseUtility {
    *
    * @param {String} data
    * @param {Function} onLoad
-   * @return {DomElement} script tag
+   * @return {HTMLElement} script tag
    */
   static loadScriptData (data, onLoad) {
     var script = document.createElement('script')
@@ -927,17 +928,15 @@ class BaseUtility {
 
   /**
    * Extracts words from camel case string.
+   * Converts to lower case.
+   * Should be accurately reversible format:
+   * 1. No capital letter acronyms.
+   * 2. One character words possible.
    *
    * @param {String} str
    * @return {Array} array of separated strings
    */
   static camelCaseToArray (str) {
-    /*
-        SPEC:
-        Should be accurately reversible format:
-        1. No capital letter acronyms.
-        2. One character words possible.
-        */
     var arr = []
     var cur = null
 
@@ -952,7 +951,7 @@ class BaseUtility {
         arr[cur] = ''
       }
 
-      arr[cur] += str[i]
+      arr[cur] += str[i].toLowerCase()
     }
 
     return arr
@@ -1259,7 +1258,7 @@ class BaseUtility {
           lineNumber: null,
           columnNumber: null
         }
-        var startIndex = line.getIndexOf('at') + 'at '.length // First index
+        var startIndex = line.indexOf('at') + 'at '.length // First index
         var lineInfo = line.substr(startIndex)
         var parts = lineInfo.split(' ')
         if (parts.length === 1) {
@@ -1288,21 +1287,25 @@ class BaseUtility {
   /**
    * Loops class functions.
    * Class format should be es6 or similarly prototyped format.
+   * Ignores constructor.
    *
    * @param {Object} classInstance
    * @param {Function} onFunction
    */
   static loopClassFunctions (classInstance, onFunction) {
-    for (let obj = classInstance; obj; obj = Object.getPrototypeOf(obj)) {
+    for (let obj = classInstance; !!obj; obj = Object.getPrototypeOf(obj)) {
       // obj returning function under certain circumstances and leading to arguments being referenced below.
       // This causes an error in strict mode, so check added below.
-      if (!obj || typeof obj === 'function') {
+      if (obj.constructor === window.Object) {
         continue
       }
       for (
         let names = Object.getOwnPropertyNames(obj), i = 0; i < names.length; i++
       ) {
         let name = names[i]
+        if (name === 'constructor') {
+          continue
+        }
         if (typeof classInstance[name] === 'function') {
           onFunction(classInstance[name], name, classInstance)
         }
@@ -1610,10 +1613,17 @@ class BaseUtility {
         Promise.resolve([])
       }
 
+      const responses = []
       let p = Promise.resolve()
-      arr.forEach(handle => {
-        p = p.then(handle)
+      arr.forEach((handle, index) => {
+        p = p.then(handle).then(response => {
+          responses[index] = response
+        })
       })
+      p = p.then(() => {
+        return responses
+      })
+
       return p
     } else {
       const promises = []
@@ -1645,7 +1655,7 @@ class BaseUtility {
 
     str += 'base64,'
 
-    str += `${data};`
+    str += `${data}`
 
     return str
   }
