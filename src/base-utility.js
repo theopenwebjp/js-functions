@@ -1285,7 +1285,7 @@ class BaseUtility {
   }
 
   /**
-   * Loops class functions.
+   * Loops class instance functions.
    * Class format should be es6 or similarly prototyped format.
    * Ignores constructor.
    *
@@ -1296,6 +1296,11 @@ class BaseUtility {
     for (let obj = classInstance; !!obj; obj = Object.getPrototypeOf(obj)) {
       // obj returning function under certain circumstances and leading to arguments being referenced below.
       // This causes an error in strict mode, so check added below.
+      // getPrototypeOf returns function on static classes.
+      if (typeof obj !== 'object') {
+        console.warn('type is not object. Check that static class was not passed.')
+        continue
+      }
       if (obj.constructor === window.Object) {
         continue
       }
