@@ -1339,10 +1339,11 @@ class BaseUtility {
   }
 
   /**
+   * Loop static class methods.
    * TODO
    */
   static loopStaticClassMethods () {
-    
+
   }
 
   /**
@@ -1352,7 +1353,7 @@ class BaseUtility {
    * @param {Object} classInstance
    */
   static bindClassThis (classInstance) {
-    BaseUtility.loopClassFunctions(classInstance, (name) => {
+    BaseUtility.loopClassFunctions(classInstance, (value, name) => {
       const variable = classInstance[name]
       classInstance[name] = variable.bind(classInstance)
     })
