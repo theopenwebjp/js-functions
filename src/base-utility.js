@@ -14,7 +14,7 @@ class BaseUtility {
    * @param {Boolean} useClosingTagEnd Allows for things like {{{a}}} > {a} instead of {a
    * @return {Array} Array of detected wrapped strings
    */
-  static getWrappedStrings (
+  static getWrappedStrings(
     str,
     wrapperOpen,
     wrapperClose,
@@ -68,7 +68,7 @@ class BaseUtility {
    *
    * @param {Function} callback
    */
-  static asyncCheck (callback) {
+  static asyncCheck(callback) {
     var ms = Math.ceil(Math.random() * 10)
     window.setTimeout(function () {
       const returnVal = 'check ok'
@@ -84,7 +84,7 @@ class BaseUtility {
    * @param {number} resolveIndex
    * @return {Promise}
    */
-  static promisify (handle, args, resolveIndex) {
+  static promisify(handle, args, resolveIndex) {
     var oldHandle = handle
     handle = function () {
       var oldCallback = args[resolveIndex]
@@ -111,7 +111,7 @@ class BaseUtility {
    * @param {Function} onEnd
    * @return {Boolean}
    */
-  static asyncHandler (arr, onEnd) {
+  static asyncHandler(arr, onEnd) {
     /*
         array item = {
           handle: null,
@@ -163,7 +163,7 @@ class BaseUtility {
    * @param {*} b
    * @return {Boolean}
    */
-  static equals (a, b) {
+  static equals(a, b) {
     /*
         Required because NaN !== NaN:
         var i = document.createElement("input"); i.valueAsNumber === i.valueAsNumber;
@@ -185,7 +185,7 @@ class BaseUtility {
    * @param {Array} b
    * @return {Boolean}
    */
-  static arrayEquals (a, b) {
+  static arrayEquals(a, b) {
     if (a.length !== b.length) {
       return false
     }
@@ -208,12 +208,12 @@ class BaseUtility {
    * @param {*} data
    * @return {Boolean}
    */
-  static exists (data) {
+  static exists(data) {
     // More useful data check than "==" OR !!
     return !(data === null || data === undefined)
   }
 
-  static buildMediaQuery (dimensions) {
+  static buildMediaQuery(dimensions) {
     var d = dimensions
     var parts = []
     if (BaseUtility.exists(d.width) && BaseUtility.exists(d.width.min)) {
@@ -245,7 +245,7 @@ class BaseUtility {
    * Asks for print. Not really needed. Should remove later.
    * @deprecated
    */
-  static promptPrint () {
+  static promptPrint() {
     window.print()
   }
 
@@ -256,7 +256,7 @@ class BaseUtility {
    * @param {Object} options See link
    * @see https://developers.google.com/web/tools/chrome-devtools/console/console-write#styling_console_output_with_css
    */
-  static log (data, options = null) {
+  static log(data, options = null) {
     if (!options) {
       options = {
         prettify: false,
@@ -302,7 +302,7 @@ class BaseUtility {
    * @param {String} dataUrl
    * @return {String}
    */
-  static getDataUrlExtension (dataUrl) {
+  static getDataUrlExtension(dataUrl) {
     return dataUrl.split(';')[0].split('/')[1]
   }
 
@@ -313,7 +313,7 @@ class BaseUtility {
    * @param {String} name
    * @param {String} mimeType
    */
-  static download (data, name, mimeType) {
+  static download(data, name, mimeType) {
     var blob = new window.Blob([data], {
       type: mimeType
     })
@@ -323,7 +323,7 @@ class BaseUtility {
   /**
    * Downloads the current HTML page
    */
-  static downloadCurrentPage () {
+  static downloadCurrentPage() {
     var data = document.documentElement.innerHTML
     var fileName = BaseUtility.getFileName(window.location.href)
     return BaseUtility.download(data, fileName, 'text/html')
@@ -336,7 +336,7 @@ class BaseUtility {
    * @param {String} url
    * @return {String} file name
    */
-  static getFileName (url) {
+  static getFileName(url) {
     return url.split('#').shift() // No fragment
       .split('?').shift() // No arguments
       .split('/').pop() // Only last route
@@ -348,7 +348,7 @@ class BaseUtility {
    * @param {String} url
    * @return {String} file extension
    */
-  static getFileExtension (url) {
+  static getFileExtension(url) {
     var parts = url.split('.')
     var ext = parts[parts.length - 1] || ''
     return ext
@@ -360,7 +360,7 @@ class BaseUtility {
    * @param {String} dataUrl
    * @param {String} name
    */
-  static downloadDataUrl (dataUrl, name) {
+  static downloadDataUrl(dataUrl, name) {
     var url = dataUrl.replace(
       /^data:image\/[^;]/,
       'data:application/octet-stream'
@@ -377,7 +377,7 @@ class BaseUtility {
    * @param {Blob} blob
    * @param {String} name
    */
-  static downloadBlob (blob, name) {
+  static downloadBlob(blob, name) {
     // CREATE URL ELEMENT
     var url = window.URL.createObjectURL(blob)
 
@@ -412,7 +412,7 @@ class BaseUtility {
    * @param {String} url
    * @param {String} fullName
    */
-  static downloadLink (url, fullName) {
+  static downloadLink(url, fullName) {
     // CREATE LINK
     var link = window.document.createElement('a')
     link.href = url
@@ -443,7 +443,7 @@ class BaseUtility {
    * @param {Function} onError optional error handler
    * @return {Object}
    */
-  static toObject (data, onError = null) {
+  static toObject(data, onError = null) {
     var obj = {}
 
     try {
@@ -466,7 +466,7 @@ class BaseUtility {
    * @param {String} str
    * @return {Object}
    */
-  static parseFuzzyJson (str) {
+  static parseFuzzyJson(str) {
     var obj
 
     // Try standard JSON
@@ -492,7 +492,7 @@ class BaseUtility {
    * @param {String} str
    * @return {Object}
    */
-  static parseJson (str) {
+  static parseJson(str) {
     if (!window.JSON) {
       return null
     }
@@ -511,7 +511,7 @@ class BaseUtility {
    * @param {String} jsonObj
    * @return {String|null}
    */
-  static stringifyJson (jsonObj) {
+  static stringifyJson(jsonObj) {
     if (!window.JSON) {
       return null
     }
@@ -531,7 +531,7 @@ class BaseUtility {
    * @param {Function} onData
    * @return {Promise}
    */
-  static loadFiles (urls, onData) {
+  static loadFiles(urls, onData) {
     var promises = []
     for (var i = 0; i < urls.length; i++) {
       promises.push(
@@ -557,7 +557,7 @@ class BaseUtility {
    * @param {Function} onError
    * @return {XMLHttpRequest}
    */
-  static loadFile (url, callback, onError = null) {
+  static loadFile(url, callback, onError = null) {
     var xhttp = new window.XMLHttpRequest()
     xhttp.onreadystatechange = function () {
       if (this.readyState === 4 && this.status === 200) {
@@ -579,7 +579,7 @@ class BaseUtility {
    * @param {Function} callback
    * @param {Array} args
    */
-  static handleCallback (callback, args) {
+  static handleCallback(callback, args) {
     if (!callback) {
       return args[0]
     }
@@ -593,7 +593,7 @@ class BaseUtility {
    * @param {*} data
    * @param {String} name
    */
-  static downloadData (data, name) {
+  static downloadData(data, name) {
     var downloadableData = data // Process here
     if (!name) {
       name = 'untitled'
@@ -612,7 +612,7 @@ class BaseUtility {
    * @param {String} defaultText
    * @return {*}
    */
-  static handlePrompt (handle, text, defaultText) {
+  static handlePrompt(handle, text, defaultText) {
     var value = window.prompt(text, defaultText)
     return handle(value)
   }
@@ -622,7 +622,7 @@ class BaseUtility {
    * @deprecated
    * @return {Date}
    */
-  static getCurrentDate () {
+  static getCurrentDate() {
     var date = new Date()
     return date
   }
@@ -636,7 +636,7 @@ class BaseUtility {
    * @param {Array} lenArr
    * @return {String}
    */
-  static getFormattedString (str, delimiter, lenArr) {
+  static getFormattedString(str, delimiter, lenArr) {
     // Ignore no formatting
     if (!delimiter || !lenArr || lenArr.length === 0) {
       return str
@@ -673,7 +673,7 @@ class BaseUtility {
    * @deprecated
    * @param {Function} callback
    */
-  static getCurrentLocation (callback) {
+  static getCurrentLocation(callback) {
     return navigator.geolocation.getCurrentPosition(function (pos) {
       callback(pos.latitude, pos.longitude)
     })
@@ -687,7 +687,7 @@ class BaseUtility {
    * @param {Object} options
    * @return {FileReader}
    */
-  static loadFileInput (event, callback, options) {
+  static loadFileInput(event, callback, options) {
     var file = null
 
     if (!event.dataTransfer && event.target.files.length > 0) {
@@ -720,7 +720,7 @@ class BaseUtility {
    * @param {Number} colCount
    * @return {Array}
    */
-  static convertTabbedDataToArray (data, colCount) {
+  static convertTabbedDataToArray(data, colCount) {
     var arr = []
     var TAB = '\t'
     var LF = '\n'
@@ -780,11 +780,11 @@ class BaseUtility {
    * @param {String} replace
    * @return {String} replace complete string
    */
-  static replaceAll (str, find, replace) {
+  static replaceAll(str, find, replace) {
     return str.split(find).join(replace)
   }
 
-  static getLoadScriptHandle (src, parent) {
+  static getLoadScriptHandle(src, parent) {
     return new Promise((resolve, reject) => {
       const script = document.createElement('script')
       script.setAttribute('type', 'text/javascript')
@@ -797,7 +797,7 @@ class BaseUtility {
     })
   }
 
-  static getLoadStyleSheetHandle (src, parent) {
+  static getLoadStyleSheetHandle(src, parent) {
     return new Promise((resolve, reject) => {
       const link = document.createElement('link')
       link.setAttribute('rel', 'stylesheet')
@@ -814,7 +814,7 @@ class BaseUtility {
     })
   }
 
-  static getLoadTemplateHandle (src, parent) {
+  static getLoadTemplateHandle(src, parent) {
     return new Promise((resolve, reject) => {
       const link = document.createElement('link')
       link.setAttribute('rel', 'import')
@@ -837,7 +837,7 @@ class BaseUtility {
    * @param {Object} optionsAbstract
    * @return {Promise}
    */
-  static loadAbstractUrls (arr, handle, optionsAbstract) {
+  static loadAbstractUrls(arr, handle, optionsAbstract) {
     // Deprecated: @param {Boolean} ordered default false because order not usually important.
     const options = typeof optionsAbstract === 'object' ? optionsAbstract : {}
     const ordered =
@@ -860,7 +860,7 @@ class BaseUtility {
    * @param {Object} options See loadAbstractUrls
    * @return {Promise}
    */
-  static loadDependencyUrls (arr, options = {}) {
+  static loadDependencyUrls(arr, options = {}) {
     const handle = (src, parent) => {
       if (src.substr(-'.js'.length) === '.js') {
         return BaseUtility.getLoadScriptHandle(src, parent)
@@ -883,7 +883,7 @@ class BaseUtility {
    * @param {Object} optionsAbstract
    * @return {Promise}
    */
-  static loadStyleSheets (arr, optionsAbstract) {
+  static loadStyleSheets(arr, optionsAbstract) {
     return BaseUtility.loadAbstractUrls(
       arr,
       BaseUtility.getLoadStyleSheetHandle,
@@ -897,7 +897,7 @@ class BaseUtility {
    * @param {Object} optionsAbstract
    * @return {Promise}
    */
-  static loadScripts (arr, optionsAbstract) {
+  static loadScripts(arr, optionsAbstract) {
     return BaseUtility.loadAbstractUrls(
       arr,
       BaseUtility.getLoadScriptHandle,
@@ -912,7 +912,7 @@ class BaseUtility {
    * @param {Function} onLoad
    * @return {HTMLElement} script tag
    */
-  static loadScriptData (data, onLoad) {
+  static loadScriptData(data, onLoad) {
     var script = document.createElement('script')
     script.setAttribute('type', 'text/javascript')
     script.innerHTML = data
@@ -936,7 +936,7 @@ class BaseUtility {
    * @param {String} str
    * @return {Array} array of separated strings
    */
-  static camelCaseToArray (str) {
+  static camelCaseToArray(str) {
     var arr = []
     var cur = null
 
@@ -964,7 +964,7 @@ class BaseUtility {
    * @param {String} char
    * @return {Boolean}
    */
-  static isCapitalLetter (char) {
+  static isCapitalLetter(char) {
     if (char && char.toUpperCase() === char) {
       return true
     } else {
@@ -978,7 +978,7 @@ class BaseUtility {
    * @param {String} str
    * @return {String}
    */
-  static capitalize (str) {
+  static capitalize(str) {
     var firstChar = str.substr(0, 1)
     var otherChars = str.substr(1) || ''
 
@@ -998,7 +998,7 @@ class BaseUtility {
    * @param {*} find value searching for.
    * @return {*} index(String or Number)
    */
-  static getIndexOf (data, find) {
+  static getIndexOf(data, find) {
     // Allows using object
     var index = -1
 
@@ -1025,7 +1025,7 @@ class BaseUtility {
    * @param {String} format camelCase, any delimiter.
    * @return {Array} array of delimited strings
    */
-  static delimiterStringToArray (str, format) {
+  static delimiterStringToArray(str, format) {
     var cHandle = null
 
     if (format === 'camelCase') {
@@ -1047,7 +1047,7 @@ class BaseUtility {
    * @param {String} str2
    * @return {Number}
    */
-  static getStringSimilarity (str1, str2) {
+  static getStringSimilarity(str1, str2) {
     /*
         Positive:
         1. Exact
@@ -1076,7 +1076,7 @@ class BaseUtility {
    * @param {String} str2
    * @return {Number} (0~1)
    */
-  static getStringInclusionWeight (str1, str2) {
+  static getStringInclusionWeight(str1, str2) {
     var foundStr = ''
     var cur
 
@@ -1099,7 +1099,7 @@ class BaseUtility {
    * @param {Number} num2
    * @return {Number}
    */
-  static getNumberSimilarity (num1, num2) {
+  static getNumberSimilarity(num1, num2) {
     var max = BaseUtility.getMax(num1, num2)
     var min = BaseUtility.getMin(num1, num2)
     var diff = max - min
@@ -1115,7 +1115,7 @@ class BaseUtility {
    * @param {Array} args Array of numbers
    * @return {Number}
    */
-  static getMax (...args) {
+  static getMax(...args) {
     var max = null
     for (var i = 0; i < args.length; i++) {
       if (max === null || args[i] > max) {
@@ -1132,7 +1132,7 @@ class BaseUtility {
    * @param {Array} args Array of numbers
    * @return {Number}
    */
-  static getMin (...args) {
+  static getMin(...args) {
     var min = null
     for (var i = 0; i < args.length; i++) {
       if (min === null || args[i] < min) {
@@ -1143,7 +1143,7 @@ class BaseUtility {
     return min
   }
 
-  static removeNonCharacters (str) {
+  static removeNonCharacters(str) {
     var returnStr = str
 
     // Outer
@@ -1168,7 +1168,7 @@ class BaseUtility {
    * @param {Function} func
    * @return {Boolean}
    */
-  static isNativeFunction (func) {
+  static isNativeFunction(func) {
     var str = func.toString()
     var trimmedStr = BaseUtility.removeNonCharacters(str)
     var expected = '{[nativecode]}'
@@ -1182,7 +1182,7 @@ class BaseUtility {
    * @param {Array} funcs array of functions
    * @return {String}
    */
-  static buildFunctionModule (funcs) {
+  static buildFunctionModule(funcs) {
     var str = ''
     var func
     for (var i = 0; i < funcs.length; i++) {
@@ -1201,7 +1201,7 @@ class BaseUtility {
    * @param {Function} func
    * @return {Boolean}
    */
-  static isLogFunction (func) {
+  static isLogFunction(func) {
     var logFunctions = [window.alert]
     if (window.console) {
       // https://developer.mozilla.org/en/docs/Web/API/console
@@ -1221,7 +1221,7 @@ class BaseUtility {
    * Gets standard info from error object + more.
    * @return {Object} info
    */
-  static getStackInfo () {
+  static getStackInfo() {
     var info = {
       error: null,
       stack: '',
@@ -1291,7 +1291,7 @@ class BaseUtility {
    * @param {Object} classInstance
    * @param {Function} onFunction
    */
-  static loopClassFunctions (classInstance, onFunction) {
+  static loopClassFunctions(classInstance, onFunction) {
     BaseUtility.loopClass(classInstance, (name) => {
       if (typeof classInstance[name] === 'function') {
         onFunction(classInstance[name], name, classInstance)
@@ -1305,7 +1305,7 @@ class BaseUtility {
   * @param {Object} classInstance
   * @param {Function} onFunction
   */
-  static loopClassProperties (classInstance, onProperty) {
+  static loopClassProperties(classInstance, onProperty) {
     BaseUtility.loopClass(classInstance, (name) => {
       if (typeof classInstance[name] !== 'function') {
         onProperty(classInstance[name], name, classInstance)
@@ -1313,7 +1313,7 @@ class BaseUtility {
     })
   }
 
-  static loopClass (classInstance, onVariable) {
+  static loopClass(classInstance, onVariable) {
     for (let obj = classInstance; obj; obj = Object.getPrototypeOf(obj)) {
       // obj returning function under certain circumstances and leading to arguments being referenced below.
       // This causes an error in strict mode, so check added below.
@@ -1342,7 +1342,7 @@ class BaseUtility {
    * Loop static class methods.
    * TODO
    */
-  static loopStaticClassMethods () {
+  static loopStaticClassMethods() {
 
   }
 
@@ -1352,26 +1352,26 @@ class BaseUtility {
    *
    * @param {Object} classInstance
    */
-  static bindClassThis (classInstance) {
-    BaseUtility.loopClassFunctions(classInstance, (value, name) => {
+  static bindClassThis(classInstance) {
+    BaseUtility.loopClassFunctions(classInstance, (value, name, obj) => { // ??try with obj instead of same class instance.
       const variable = classInstance[name]
       classInstance[name] = variable.bind(classInstance)
     })
   }
 
-  static applyStaticFunctions (classInstance, constructor) {
+  static applyStaticFunctions(classInstance, constructor) {
     const staticFunctions = BaseUtility.getStaticFunctions(constructor)
     for (let key in staticFunctions) {
       classInstance[key] = staticFunctions[key]
     }
   }
 
-  static getStaticFunctionNames (constructor) {
+  static getStaticFunctionNames(constructor) {
     return Object.getOwnPropertyNames(constructor)
       .filter(prop => typeof constructor[prop] === 'function')
   }
 
-  static getStaticFunctions (constructor) {
+  static getStaticFunctions(constructor) {
     const names = BaseUtility.getStaticFunctionNames(constructor)
     const functions = {}
     names.forEach(name => {
@@ -1386,7 +1386,7 @@ class BaseUtility {
    * @param {Array} objArr Array of objects containing numbers.
    * @return {Object} Reduced object
    */
-  static reduceObjectArray (objArr) {
+  static reduceObjectArray(objArr) {
     let returnObj = {}
     for (let i = 0; i < objArr.length; i++) {
       let obj = objArr[i]
@@ -1410,7 +1410,7 @@ class BaseUtility {
    * @param {Number} pollInterval ms
    * @return {Promise}
    */
-  static waitFor (condition, pollInterval = 50) {
+  static waitFor(condition, pollInterval = 50) {
     if (condition()) {
       return Promise.resolve()
     }
@@ -1436,7 +1436,7 @@ class BaseUtility {
    * @param {Number} ms milliseconds
    * @return {Promise}
    */
-  static sleep (ms) {
+  static sleep(ms) {
     return new Promise(resolve => {
       window.setTimeout(resolve, ms)
     })
@@ -1453,7 +1453,7 @@ class BaseUtility {
    * @param {Object} options
    * @return {*} Return data(single or array)
    */
-  static handleEvent (events, name, data = undefined, options = {}) {
+  static handleEvent(events, name, data = undefined, options = {}) {
     const handleData = events[name]
     const spreadArgs = !!options.spreadArgs || false
     const args = (spreadArgs && Array.isArray(data)) ? [...data] : [data]
@@ -1482,7 +1482,7 @@ class BaseUtility {
    * @param {Object} events2
    * @return {Object} merged events object
    */
-  static mergeEventsObject (events1, events2) {
+  static mergeEventsObject(events1, events2) {
     const events = {}
     const forceArray = val => {
       // Standardize empty
@@ -1519,7 +1519,7 @@ class BaseUtility {
    * @param {String} url
    * @return {Promise}
    */
-  static urlToBlob (url) {
+  static urlToBlob(url) {
     return new Promise((resolve, reject) => {
       // HTML5(DataURL)
       if (
@@ -1582,7 +1582,7 @@ class BaseUtility {
    * @see https://stackoverflow.com/questions/21485545/is-there-a-way-to-tell-if-an-es6-promise-is-fulfilled-rejected-resolved?noredirect=1&lq=1
    * @see https://stackoverflow.com/questions/35716275/how-to-tell-if-a-promise-is-resolved
    */
-  static timeout (promise, ms) {
+  static timeout(promise, ms) {
     return new Promise((resolve, reject) => {
       const onEnd = data => {
         resolve(data)
@@ -1604,7 +1604,7 @@ class BaseUtility {
    * @param {Boolean} resolved (resolved = true. rejected = false)
    * @return {Promise} resolves array of promises
    */
-  static getPromisesByState (promises, resolved = false) {
+  static getPromisesByState(promises, resolved = false) {
     const checkPromise = promise => {
       return new Promise(resolve => {
         let bool = false
@@ -1641,7 +1641,7 @@ class BaseUtility {
    * @param {Boolean} ordered Whether to execute handles sequentially or in any order(fastest).
    * @return {Promise}
    */
-  static promiseAll (arr, ordered = false) {
+  static promiseAll(arr, ordered = false) {
     if (ordered) {
       if (arr.length === 0) {
         Promise.resolve([])
@@ -1677,7 +1677,7 @@ class BaseUtility {
    * @param {Object} options optional data outputted in format key=value;
    * @return {String}
    */
-  static createDataURI (data, mimeType = 'text/plain', options = {}) {
+  static createDataURI(data, mimeType = 'text/plain', options = {}) {
     data = window.btoa(data)
 
     let str = 'data:'
@@ -1701,7 +1701,7 @@ class BaseUtility {
    * @param {*} b
    * @param {String} comparator <= < = > >=
    */
-  static compare (a, b, comparator = '=') {
+  static compare(a, b, comparator = '=') {
     switch (comparator) {
       case '=':
         return a === b
@@ -1731,7 +1731,7 @@ class BaseUtility {
    * @param {String} str
    * @return {Object}
    */
-  static isMinimzed (str) {
+  static isMinimzed(str) {
     /*
     NOTES
     Other possible ways of detecting being minimized:
@@ -1798,7 +1798,7 @@ class BaseUtility {
    * @param {String} value
    * @param {Function} func
    */
-  static watchForHashValue (value, func) {
+  static watchForHashValue(value, func) {
     const getUrlHash = (url) => {
       let hashStr = (new window.URL(url)).hash
       return (hashStr.length > 0) ? hashStr.substr(1) : ''
@@ -1825,7 +1825,7 @@ class BaseUtility {
    * @param {Function} checker (char)=>{}
    * @return {Array} Results array each with format({startIndex, endIndex, value})
    */
-  static scanString (string, checker) {
+  static scanString(string, checker) {
     const newStatus = () => {
       return {
         startIndex: null,
@@ -1865,7 +1865,7 @@ class BaseUtility {
    * @param {Boolean} sortRequired If false, expects "start" index from low to high.
    * @return {String} replaced string
    */
-  static replaceStringIndexes (string, indexes = [], sortRequired = true) {
+  static replaceStringIndexes(string, indexes = [], sortRequired = true) {
     const VALUE_KEY = 0
     const START_INDEX_KEY = 1
     const END_INDEX_KEY = 2
@@ -1912,7 +1912,7 @@ class BaseUtility {
    * @param {Number} endIndex
    * @return {String}
    */
-  static replaceAt (string, replacer, startIndex, endIndex) {
+  static replaceAt(string, replacer, startIndex, endIndex) {
     return string.substring(0, startIndex) + replacer + string.substring(endIndex)
   }
 
@@ -1921,7 +1921,7 @@ class BaseUtility {
    * @param {Number} length
    * @return {String}
    */
-  static generateRandomString (length = 0) {
+  static generateRandomString(length = 0) {
     let string = ''
     var allowed = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
 
@@ -1937,14 +1937,14 @@ class BaseUtility {
    * rel="noopener noreferrer"
    * @see https://developers.google.com/web/tools/lighthouse/audits/noopener
    */
-  static fixPageAnchorTagSecurity () {
+  static fixPageAnchorTagSecurity() {
     const anchorList = [...document.querySelectorAll('a')]
     anchorList.forEach(a => {
       BaseUtility.setSpaceDelimitedElementAttribute(a, 'rel', ['noopener', 'noreferrer'])
     })
   }
 
-  static setSpaceDelimitedElementAttribute (element, attribute, values = []) {
+  static setSpaceDelimitedElementAttribute(element, attribute, values = []) {
     let attributeValues = element.getAttribute(attribute).split(' ')
     values.forEach(value => {
       if (!attributeValues.includes(value)) {

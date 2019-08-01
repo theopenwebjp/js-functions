@@ -252,22 +252,22 @@ describe('base-utility.js', function () {
   describe('class looping', () => {
     const getClass = () => {
       class Extension {
-        constructor () {
+        constructor() {
           this.a = {}
         }
-        e () {
+        e() {
           return this
         }
       }
       class MyClass extends Extension {
-        constructor () {
+        constructor() {
           super()
           this.c = {}
         }
-        f1 () {
+        f1() {
           return this
         }
-        f2 () {
+        f2() {
           return this
         }
       }
@@ -305,133 +305,175 @@ describe('base-utility.js', function () {
         keys.push(key)
       })
       it('Keys match', () => {
-        chai.expect(keys).to.deep.equal(['c', 'a'])
+        chai.expect(keys.sort()).to.deep.equal(['a', 'c'])
       })
     })
 
     describe('bindClassThis', function () {
-      const myClass = getClass()
-      BaseUtility.bindClassThis(myClass)
-      const obj = {
-        h: myClass.f1
-      }
-      it('Function is bound', () => {
-        chai.expect(obj.h()).to.equal(myClass)
-      })
-    })
-  })
-
-  describe('reduceObjectArray', function () {
-    it('', () => {
-      const objArr = [
-        {
-          a: 1,
-          b: 5
-        },
-        {
-          a: 7,
-          b: 8
+      class MyClass {
+        constructor() {
+          this.ref = true
+          this.obj = {
+            func: function () {
+              return this
+            }
+          }
+          this.arrow = () => {
+            return this
+          }
         }
-      ]
-      const obj = BaseUtility.reduceObjectArray(objArr)
-      chai.expect(obj).to.deep.equal({
-        a: 8,
-        b: 13
+        method() {
+          return this
+        }
+        callback() {
+          const callback = () => {
+            return this
+          }
+          return this.callbackExecutor(callback)
+        }
+        callbackExecutor(callback) {
+          return callback()
+        }
+      }
+      const myClass = new MyClass()
+
+      BaseUtility.bindClassThis(myClass)
+      
+    it('values remain', () => {
+      chai.expect(myClass.obj).to.be.an('object')
+      chai.expect(myClass.arrow).to.be.a('function')
+      chai.expect(myClass.method).to.be.a('function')
+    })
+
+    it('arrow function this OK', () => {
+      chai.expect(myClass.arrow().ref).to.equal(true)
+    })
+
+      it('method this OK', () => {
+        chai.expect(myClass.method().ref).to.equal(true)
       })
+
+      it('object function this NOT HANDLED SO SHOULD FAIL', () => {
+      chai.expect(myClass.obj.func().ref).to.equal(undefined)
+    })
+
+    it('callback function this OK', () => {
+      chai.expect(myClass.callback().ref).to.equal(true)
     })
   })
+})
 
-  describe('waitFor', function () {
-    it('', () => {
-      const ms = Date.now()
-      const waitMs = 200
-      const condition = () => {
-        return (Date.now() >= (ms + waitMs))
+describe('reduceObjectArray', function () {
+  it('', () => {
+    const objArr = [
+      {
+        a: 1,
+        b: 5
+      },
+      {
+        a: 7,
+        b: 8
       }
-      return BaseUtility.waitFor(condition)
-        .then(() => {
-          chai.assert(true)
-        })
+    ]
+    const obj = BaseUtility.reduceObjectArray(objArr)
+    chai.expect(obj).to.deep.equal({
+      a: 8,
+      b: 13
     })
   })
+})
 
-  describe('sleep', function () {
-    it('', () => {
-      const ms = Date.now()
-      const sleepForMs = 200
-      const toleranceInMs = 10
-      return BaseUtility.sleep(sleepForMs)
-        .then(() => {
-          chai.expect(Math.abs((Date.now() - ms) - sleepForMs) <= toleranceInMs)
-        })
-    })
+describe('waitFor', function () {
+  it('', () => {
+    const ms = Date.now()
+    const waitMs = 200
+    const condition = () => {
+      return (Date.now() >= (ms + waitMs))
+    }
+    return BaseUtility.waitFor(condition)
+      .then(() => {
+        chai.assert(true)
+      })
+  })
+})
+
+describe('sleep', function () {
+  it('', () => {
+    const ms = Date.now()
+    const sleepForMs = 200
+    const toleranceInMs = 10
+    return BaseUtility.sleep(sleepForMs)
+      .then(() => {
+        chai.expect(Math.abs((Date.now() - ms) - sleepForMs) <= toleranceInMs)
+      })
+  })
+})
+
+describe('promiseAll', function () {
+  it('resolves promises unordered', () => {
+    const h1 = () => { return Promise.resolve(1) }
+    const h2 = () => { return Promise.resolve(2) }
+    const h3 = () => { return Promise.resolve(3) }
+    const handles = [h1, h2, h3]
+
+    return BaseUtility.promiseAll(handles, false)
+      .then((arr) => {
+        chai.expect(arr).to.deep.equal([1, 2, 3])
+      })
   })
 
-  describe('promiseAll', function () {
-    it('resolves promises unordered', () => {
-      const h1 = () => { return Promise.resolve(1) }
-      const h2 = () => { return Promise.resolve(2) }
-      const h3 = () => { return Promise.resolve(3) }
-      const handles = [h1, h2, h3]
+  it('resolves promises ordered', () => {
+    const t = (num, ms) => {
+      return new Promise((resolve, reject) => {
+        window.setTimeout(() => {
+          resolve(num)
+        }, ms)
+      })
+    }
 
-      return BaseUtility.promiseAll(handles, false)
-        .then((arr) => {
-          chai.expect(arr).to.deep.equal([1, 2, 3])
-        })
-    })
+    const h1 = () => { return t(1, 100) }
+    const h2 = () => { return t(4, 10) }
+    const h3 = () => { return t(6, 50) }
+    const handles = [h1, h2, h3]
 
-    it('resolves promises ordered', () => {
-      const t = (num, ms) => {
-        return new Promise((resolve, reject) => {
-          window.setTimeout(() => {
-            resolve(num)
-          }, ms)
-        })
-      }
+    return BaseUtility.promiseAll(handles, true)
+      .then((arr) => {
+        chai.expect(arr).to.deep.equal([1, 4, 6])
+      })
+  })
+})
 
-      const h1 = () => { return t(1, 100) }
-      const h2 = () => { return t(4, 10) }
-      const h3 = () => { return t(6, 50) }
-      const handles = [h1, h2, h3]
-
-      return BaseUtility.promiseAll(handles, true)
-        .then((arr) => {
-          chai.expect(arr).to.deep.equal([1, 4, 6])
-        })
-    })
+describe.skip('loadStyleSheets', function () {
+  it('loads unordered', () => {
+    // BaseUtility.loadStyleSheets(array, false);
   })
 
-  describe.skip('loadStyleSheets', function () {
-    it('loads unordered', () => {
-      // BaseUtility.loadStyleSheets(array, false);
-    })
+  it('loads ordered', () => {
+    // Need to test different speed css.
+  })
+})
 
-    it('loads ordered', () => {
-      // Need to test different speed css.
-    })
+describe('loadScripts', function () {
+  it('loads unordered', () => {
+    const src1 = BaseUtility.createDataURI('window._a = true;')
+    const src2 = BaseUtility.createDataURI('window._b = true;')
+    return BaseUtility.loadScripts([src1, src2], false)
+      .then(() => {
+        chai.expect(window._a).to.equal(true)
+        chai.expect(window._b).to.equal(true)
+      })
   })
 
-  describe('loadScripts', function () {
-    it('loads unordered', () => {
-      const src1 = BaseUtility.createDataURI('window._a = true;')
-      const src2 = BaseUtility.createDataURI('window._b = true;')
-      return BaseUtility.loadScripts([src1, src2], false)
-        .then(() => {
-          chai.expect(window._a).to.equal(true)
-          chai.expect(window._b).to.equal(true)
-        })
-    })
-
-    it.skip('loads ordered', () => {
-      // Need to test different speed scripts.
-    })
+  it.skip('loads ordered', () => {
+    // Need to test different speed scripts.
   })
+})
 
-  describe('createDataURI', function () {
-    it('creates data URI as expected: Hello World! => SGVsbG8gV29ybGQh', () => {
-      // https://www.base64encode.org/
-      const str = BaseUtility.createDataURI('Hello World!', mimeType = 'text/plain', { charset: 'utf-8' })
-      chai.expect(str).to.equal('data:text/plain;charset=utf-8;base64,SGVsbG8gV29ybGQh')
-    })
+describe('createDataURI', function () {
+  it('creates data URI as expected: Hello World! => SGVsbG8gV29ybGQh', () => {
+    // https://www.base64encode.org/
+    const str = BaseUtility.createDataURI('Hello World!', mimeType = 'text/plain', { charset: 'utf-8' })
+    chai.expect(str).to.equal('data:text/plain;charset=utf-8;base64,SGVsbG8gV29ybGQh')
   })
+})
 })
