@@ -1286,17 +1286,39 @@ class BaseUtility {
 
   /**
    * Loops class instance functions.
-   * Class format should be es6 or similarly prototyped format.
    * Ignores constructor.
    *
    * @param {Object} classInstance
    * @param {Function} onFunction
    */
   static loopClassFunctions (classInstance, onFunction) {
-    for (let obj = classInstance; !!obj; obj = Object.getPrototypeOf(obj)) {
+    BaseUtility.loopClass(classInstance, (name) => {
+      if (typeof classInstance[name] === 'function') {
+        onFunction(classInstance[name], name, classInstance)
+      }
+    })
+  }
+
+  /**
+  * Loops class instance properties.
+  *
+  * @param {Object} classInstance
+  * @param {Function} onFunction
+  */
+  static loopClassProperties (classInstance, onProperty) {
+    BaseUtility.loopClass(classInstance, (name) => {
+      if (typeof classInstance[name] !== 'function') {
+        onProperty(classInstance[name], name, classInstance)
+      }
+    })
+  }
+
+  static loopClass (classInstance, onVariable) {
+    for (let obj = classInstance; obj; obj = Object.getPrototypeOf(obj)) {
       // obj returning function under certain circumstances and leading to arguments being referenced below.
       // This causes an error in strict mode, so check added below.
       // getPrototypeOf returns function on static classes.
+      // ?? No need to loop past classInstance. Fix later.
       if (typeof obj !== 'object') {
         console.warn('type is not object. Check that static class was not passed.')
         continue
@@ -1311,11 +1333,16 @@ class BaseUtility {
         if (name === 'constructor') {
           continue
         }
-        if (typeof classInstance[name] === 'function') {
-          onFunction(classInstance[name], name, classInstance)
-        }
+        onVariable(name)
       }
     }
+  }
+
+  /**
+   * TODO
+   */
+  static loopStaticClassMethods () {
+    
   }
 
   /**
@@ -1325,8 +1352,9 @@ class BaseUtility {
    * @param {Object} classInstance
    */
   static bindClassThis (classInstance) {
-    BaseUtility.loopClassFunctions(classInstance, (func, key, obj) => {
-      obj[key] = func.bind(classInstance)
+    BaseUtility.loopClassFunctions(classInstance, (name) => {
+      const variable = classInstance[name]
+      classInstance[name] = variable.bind(classInstance)
     })
   }
 

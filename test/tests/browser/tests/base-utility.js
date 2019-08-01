@@ -252,11 +252,18 @@ describe('base-utility.js', function () {
   describe('class looping', () => {
     const getClass = () => {
       class Extension {
+        constructor () {
+          this.a = {}
+        }
         e () {
           return this
         }
       }
       class MyClass extends Extension {
+        constructor () {
+          super()
+          this.c = {}
+        }
         f1 () {
           return this
         }
@@ -291,13 +298,24 @@ describe('base-utility.js', function () {
       })
     })
 
+    describe('loopClassProperties', function () {
+      const myClass = getClass()
+      const keys = []
+      BaseUtility.loopClassProperties(myClass, (prop, key) => {
+        keys.push(key)
+      })
+      it('Keys match', () => {
+        chai.expect(keys).to.deep.equal(['c', 'a'])
+      })
+    })
+
     describe('bindClassThis', function () {
-      it('', () => {
-        const myClass = getClass()
-        BaseUtility.bindClassThis(myClass)
-        const obj = {
-          h: myClass.f1
-        }
+      const myClass = getClass()
+      BaseUtility.bindClassThis(myClass)
+      const obj = {
+        h: myClass.f1
+      }
+      it('Function is bound', () => {
         chai.expect(obj.h()).to.equal(myClass)
       })
     })
