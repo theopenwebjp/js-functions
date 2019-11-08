@@ -837,7 +837,7 @@ class BaseUtility {
    * @param {Object} optionsAbstract
    * @return {Promise}
    */
-  static loadAbstractUrls(arr, handle, optionsAbstract) {
+  static loadAbstractUrls(arr, handle, optionsAbstract = {}) {
     // Deprecated: @param {Boolean} ordered default false because order not usually important.
     const options = typeof optionsAbstract === 'object' ? optionsAbstract : {}
     const ordered =
@@ -883,7 +883,7 @@ class BaseUtility {
    * @param {Object} optionsAbstract
    * @return {Promise}
    */
-  static loadStyleSheets(arr, optionsAbstract) {
+  static loadStyleSheets(arr, optionsAbstract = {}) {
     return BaseUtility.loadAbstractUrls(
       arr,
       BaseUtility.getLoadStyleSheetHandle,
@@ -897,7 +897,7 @@ class BaseUtility {
    * @param {Object} optionsAbstract
    * @return {Promise}
    */
-  static loadScripts(arr, optionsAbstract) {
+  static loadScripts(arr, optionsAbstract = {}) {
     return BaseUtility.loadAbstractUrls(
       arr,
       BaseUtility.getLoadScriptHandle,
