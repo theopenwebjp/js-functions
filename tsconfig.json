@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+    "outDir": "./dist",
+    "target": "es6",
+    "noImplicitAny": true,
+    "strict": true,
+    "strictNullChecks": true,
+    "forceConsistentCasingInFileNames": true,
+    "importHelpers": true,
+    "removeComments": true,
+    "noEmit": true,
+    "declaration": true,
+    "declarationDir": "./declarations",
+    "declarationMap": true
+  },
+  "include": [
+    "./src/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/node_modules/*"
+  ],
+  "resolveJsonModule": true,
+  "moduleResolution": "node"
+}

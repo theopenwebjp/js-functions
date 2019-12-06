@@ -1,38 +1,43 @@
 {
-  "name": "js-functions",
-  "version": "1.0.0",
-  "description": "Set of general/common utility functions that can be used in JavaScript.",
-  "main": "./src/index.js",
-  "directories": {
-    "test": "tests"
-  },
-  "scripts": {
-    "test-browser": "gulp browserify-tests && mocha-phantomjs ./test/tests/browser/mocha-html/index.html -p ./node_modules/.bin/phantomjs",
-    "test": "nyc --reporter=html mocha ./test/tests/browser/tests/*.js",
-    "docs": "npm run esdoc && npm run eslint",
-    "esdoc": "./node_modules/.bin/esdoc -c ./.esdoc.json",
-    "eslint": "gulp eslint"
-  },
-  "devDependencies": {
-    "browserify": "^16.3.0",
-    "chai": "^4.2.0",
-    "esdoc": "^1.1.0",
-    "esdoc-standard-plugin": "^1.0.0",
-    "eslint": "^6.1.0",
-    "eslint-html-reporter": "^0.7.3",
-    "gulp": "^4.0.2",
-    "gulp-eslint": "^6.0.0",
-    "hamburgers": "^1.1.3",
-    "istanbul": "^0.4.5",
-    "jquery": "^3.4.1",
-    "jsdom": "^15.1.1",
-    "jsuri": "^1.3.1",
-    "mocha": "^6.2.0",
-    "mocha-phantomjs": "^4.1.0",
-    "nyc": "^14.1.1",
-    "phantomjs": "^2.1.7",
-    "node-functions": "git+https://github.com/goldingdamien/node-functions.git"
-  },
-  "author": "Damien Golding",
-  "license": "MIT"
+    "name": "js-functions",
+    "version": "1.0.0",
+    "description": "Set of general/common utility functions that can be used in JavaScript.",
+    "main": "./src/index.js",
+    "directories": {
+        "test": "tests"
+    },
+    "scripts": {
+        "test-browser": "gulp browserify-tests && mocha-phantomjs ./test/tests/browser/mocha-html/index.html -p ./node_modules/.bin/phantomjs",
+        "test": "nyc --reporter=html mocha ./test/tests/browser/tests/*.js",
+        "docs": "npm run esdoc && npm run eslint",
+        "esdoc": "./node_modules/.bin/esdoc -c ./.esdoc.json",
+        "eslint": "gulp eslint"
+    },
+    "devDependencies": {
+        "browserify": "^16.5.0",
+        "chai": "^4.2.0",
+        "esdoc": "^1.1.0",
+        "esdoc-standard-plugin": "^1.0.0",
+        "eslint": "^6.7.2",
+        "eslint-html-reporter": "^0.7.4",
+        "gulp": "^4.0.2",
+        "gulp-eslint": "^6.0.0",
+        "hamburgers": "^1.1.3",
+        "istanbul": "^0.4.5",
+        "jquery": "^3.4.1",
+        "jsdom": "^15.2.1",
+        "jsuri": "^1.3.1",
+        "mocha": "^6.2.0",
+        "mocha-phantomjs": "^4.1.0",
+        "nyc": "^14.1.1",
+        "phantomjs": "^2.1.7",
+        "node-functions": "git+https://github.com/goldingdamien/node-functions.git"
+    },
+    "author": "Damien Golding",
+    "license": "MIT",
+    "dependencies": {
+        "@types/jquery": "^3.3.31",
+        "@types/mustache": "^0.8.32",
+        "@types/urijs": "^1.19.4"
+    }
 }
