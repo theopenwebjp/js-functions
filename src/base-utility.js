@@ -2,7 +2,7 @@
  * @typedef {Object<string, *>} Dictionary
  */
 
- /**
+/**
  * @typedef {object} LimitRange
  * @property {number} min
  * @property {number} max
@@ -70,12 +70,16 @@ function logOptions() {
 
 /**
  * @typedef {object} AsyncHandlerItem
- * @property {null|function(){}} handle
+ * @property {null|function()} handle
  * @property {*[]} args
  * @property {number} callbackParamIndex
  * @property {number} index
  */
 
+/**
+ * @typedef {object} EventOptions
+ * @property {boolean} spreadArgs
+ */
 /**
  * Base utility file.
  * Should not be dependent on code outside this file.
@@ -184,18 +188,18 @@ class BaseUtility {
      * Handles multiple async functions.
      * Needs checking!!(handle, status.current positioning looks iffy.)
      *
-     * @param {AsyncHandlerItem} arr Array of items. See code.
+     * @param {AsyncHandlerItem[]} arr Array of items. See code.
      * @param {Function} onEnd
      * @return {Boolean}
      */
     static asyncHandler(arr, onEnd) {
 
-/**
- * @typedef {object} AsyncHandlerStatus
- * @property {number} current
- * @property {number} total
- * @property {*[]} returned
- */
+        /**
+         * @typedef {object} AsyncHandlerStatus
+         * @property {number} current
+         * @property {number} total
+         * @property {*[]} returned
+         */
 
         /**
          * @type {AsyncHandlerStatus}
@@ -349,14 +353,14 @@ class BaseUtility {
 
         // Type
         var type = 'log'
-        if (options.type && console[type]) {
+        if (options.type && window.console[type]) {
             type = options.type
         }
 
         // Prettify
         if (options.prettify) {
             options.beforeLog = function() {
-                console.log('')
+                window.console.log('')
             }
         }
 
@@ -364,9 +368,9 @@ class BaseUtility {
             options.beforeLog(data)
         }
         if (options.title) {
-            console.log(options.title)
+            window.console.log(options.title)
         }
-        console[type](data)
+        window.console[type](data)
         if (options.afterLog) {
             options.afterLog(data)
         }
@@ -795,37 +799,35 @@ class BaseUtility {
      *
      * @param {String} data
      * @param {Number} colCount
-     * @return {Array|Array<string[]>}
+     * @return {Array<never[]>|Array<string[]>}
      */
     static convertTabbedDataToArray(data, colCount) {
         /**
-         * @type {Array|Array<string[]>}
+         * @type {Array<never[]>|Array<string[]>}
          */
         var arr = []
         var TAB = '\t'
         var LF = '\n'
-        var split, i, x, y
-        var isStartCell, isLastCell, isFirstEndCell, isMidStartCell, isMidEndCell
-        var firstEndCellIndex, midCellColOver
 
         // Format
         var items1 = data.split(TAB)
 
         var items = []
-        for (i = 0; i < items1.length; i++) {
+        for (let i = 0; i < items1.length; i++) {
             // Settings
-            firstEndCellIndex = colCount - 1
-            midCellColOver = (i - firstEndCellIndex) % (colCount - 1)
-            isStartCell = i === 0
-            isLastCell = i + 1 === items1.length
-            isFirstEndCell = !isLastCell && i === firstEndCellIndex
-            isMidEndCell = !isLastCell && !isStartCell && !isFirstEndCell && midCellColOver === 0
+            const firstEndCellIndex = colCount - 1
+            const midCellColOver = (i - firstEndCellIndex) % (colCount - 1)
+            const isStartCell = i === 0
+            const isLastCell = i + 1 === items1.length
+            const isFirstEndCell = !isLastCell && i === firstEndCellIndex
+            const isMidEndCell = !isLastCell && !isStartCell && !isFirstEndCell && midCellColOver === 0
+            const isMidStartCell = false // TODO: Not in use.
 
             if (
                 isFirstEndCell || // row 1
                 isMidEndCell // Mid row(smaller due to lf delimiter)
             ) {
-                split = items1[i].split(LF)
+                const split = items1[i].split(LF)
                 items.push(split[0])
                 items.push(split[1])
             } else if (isMidStartCell) {
@@ -837,9 +839,9 @@ class BaseUtility {
             }
         }
 
-        for (i = 0; i < items.length; i++) {
-            x = Math.floor(i / colCount)
-            y = i % colCount
+        for (let i = 0; i < items.length; i++) {
+            const x = Math.floor(i / colCount)
+            const y = i % colCount
 
             if (!arr[x]) {
                 arr[x] = []
@@ -1378,13 +1380,13 @@ class BaseUtility {
                  * @type {StackPart}
                  */
                 var stackPart = {
-                    function: '',
-                    lineNumber: null,
-                    columnNumber: null
-                }
-                /**
-                 * @type {number}
-                 */
+                        function: '',
+                        lineNumber: null,
+                        columnNumber: null
+                    }
+                    /**
+                     * @type {number}
+                     */
                 var startIndex = line.indexOf('at') + 'at '.length // First index
                 var lineInfo = line.substr(startIndex)
                 var parts = lineInfo.split(' ')
@@ -1600,7 +1602,7 @@ class BaseUtility {
      * @param {Object} events
      * @param {String} name
      * @param {*} data data passed to event
-     * @param {Object} options
+     * @param {EventOptions} options
      * @return {*} Return data(single or array)
      */
     static handleEvent(events, name, data = undefined, options = {}) {
@@ -1766,13 +1768,13 @@ class BaseUtility {
     /**
      * Gets array of promises by status from array.
      * Main use is for early exit of Promise.all where need to get what completed.
-     * @param {Promise[]} promises
+     * @param {Promise<*>[]} promises
      * @param {Boolean} resolved (resolved = true. rejected = false)
      * @return {Promise<Promise<boolean>[]>} resolves array of promises
      */
     static getPromisesByState(promises, resolved = false) {
         /**
-         * @param {Promise} promise
+         * @param {Promise<*>} promise
          * @return {Promise<boolean>}
          */
         const checkPromise = promise => {
@@ -1787,17 +1789,11 @@ class BaseUtility {
             })
         }
 
-        /**
-         * @type {Promise[]}
-         */
-        const checkPromises = []
-        promises.forEach(promise => {
-            checkPromises.push(checkPromise(promise))
-        })
+        const checkPromises = promises.map(promise => checkPromise(promise))
 
         return Promise.all(checkPromises).then(boolArr => {
             /**
-             * @type {Promise[]}
+             * @type {Promise<*>[]}
              */
             const resolvedPromises = []
             boolArr.forEach((bool, index) => {
@@ -2148,7 +2144,7 @@ class BaseUtility {
                 attributeValues.push(value)
             }
         })
-        element.setAttribute(attributeValues.join(' '))
+        element.setAttribute(attributeValues.join(' ')) // TODO: Requires two values. Fix spec and fix.
     }
 }
 
