@@ -6,7 +6,6 @@ Set of general functions that can be used in JavaScript.
 May include stand-alone functions.
 
 No dependencies are expected to load this library.
-Some dependencies my be expected for certain functions(jquery and dependent function files).
 Node.js have been moved to a separate repository due to need for node based dependencies.
 
 Functions may be broken up into classes over time.

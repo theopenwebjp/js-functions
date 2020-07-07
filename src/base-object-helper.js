@@ -43,7 +43,7 @@ class BaseObjectHelper {
      * Does not work for __proto__ inheriting variables(Usually native class objects) and functions.
      * @param {Object} obj
      */
-  static copyObject (obj) {
+  static copyObject(obj) {
     try {
       return JSON.parse(JSON.stringify(obj))
     } catch (err) {
@@ -57,7 +57,7 @@ class BaseObjectHelper {
      * @param {Dictionary} obj
      * @return {Dictionary} shallow copy
      */
-  static copyObjectData (obj) {
+  static copyObjectData(obj) {
     /**
          * @type {Dictionary}
          */
@@ -80,7 +80,7 @@ class BaseObjectHelper {
      * @param {function(string, Dictionary, Dictionary):boolean} condition
      * @return {Dictionary} to
      */
-  static applyObj (from, to, condition) {
+  static applyObj(from, to, condition) {
     // Check
     if (!BaseObjectHelper.isObject(from) || !BaseObjectHelper.isObject(to)) {
       throw new Error('Failed object check')
@@ -106,7 +106,7 @@ class BaseObjectHelper {
      * @param {number} index
      * @return {Object} {key: key, value: val}
      */
-  static getObjectKeyValueAtIndex (obj, index) {
+  static getObjectKeyValueAtIndex(obj, index) {
     var keys = Object.keys(obj)
     /**
              * @type {KeyValue}
@@ -130,7 +130,7 @@ class BaseObjectHelper {
      * @param {Object} obj
      * @return {string[]} array of keys
      */
-  static getObjectKeys (obj) {
+  static getObjectKeys(obj) {
     // Same keys as in: for(var key in obj).
     // Does not use hasOwnProperty.
 
@@ -146,24 +146,39 @@ class BaseObjectHelper {
   }
 
   /**
+   * @typedef {Array<*>|Dictionary} CommonObject
+   */
+
+  /**
      * Expands and inserts data of common object into common object.
      * Common object: Array or normal object
      *
-     * @param {Array<*>|Dictionary} obj
-     * @param {Array<*>|Dictionary} parentObj
+     * @param {CommonObject} obj
+     * @param {CommonObject} parentObj
      * @param {Number} insertIndex
-     * @return {Array<*>|Dictionary} parentObj
+     * @return {CommonObject}
      */
-  static expandCommonObjectIntoObject (obj, parentObj, insertIndex = 0) {
-    if (Array.isArray(parentObj)) { // TODO: Array type guard.
+  static expandCommonObjectIntoObject(obj, parentObj, insertIndex = 0) {
+    /**
+     * @param {string|number} key 
+     * @param {*} value 
+     */
+    const set = (key, value) => {
+      if (Array.isArray(parentObj)) {
+        parentObj.splice(Number(key), 0, value) // Moves rest forwards
+      } else {
+        parentObj[String(key)] = value
+      }
+    }
+
+    if (Array.isArray(obj)) {
       for (let i = 0; i < obj.length; i++) {
         let key = (insertIndex + i)
-
-        parentObj.splice(key, 0, obj[i]) // Moves rest forwards
+        set(key, obj[key])
       }
     } else {
       for (let key in obj) {
-        parentObj[key] = obj[key]
+        set(key, obj[key])
       }
     }
 
@@ -176,7 +191,7 @@ class BaseObjectHelper {
      *
      * @param {Dictionary} obj
      */
-  static logObjectOnSingleLine (obj) {
+  static logObjectOnSingleLine(obj) {
     var str = ''
     var LF = '\n'
     for (var key in obj) {
@@ -192,11 +207,11 @@ class BaseObjectHelper {
      * @param {*} obj
      * @return {Boolean}
      */
-  static isObject (obj) {
+  static isObject(obj) {
     if (
       typeof obj === 'object' &&
-            obj !== null &&
-            !Array.isArray(obj)
+      obj !== null &&
+      !Array.isArray(obj)
     ) {
       return true
     } else {
@@ -210,8 +225,8 @@ class BaseObjectHelper {
      * @param {Object} obj
      * @return {Boolean}
      */
-  static isNonDomObject (obj) {
-    if (BaseObjectHelper.isObject(obj) && !obj.nodeType) { // TODO: nodeType typeguard
+  static isNonDomObject(obj) {
+    if (BaseObjectHelper.isObject(obj) && !('nodeType' in obj)) {
       return true
     } else {
       return false
@@ -224,19 +239,19 @@ class BaseObjectHelper {
      * @param {*} obj
      * @return {Boolean}
      */
-  static isCommonObject (obj) {
+  static isCommonObject(obj) {
     return (BaseObjectHelper.isObject(obj) || Array.isArray(obj))
   }
 
   /**
      * Object with possible nesting => array of objects with information.
      *
-     * @param {Object} obj
+     * @param {Dictionary} obj
      * @param {Number} curDepth
      * @param {ObjectInfo[]} arr
      * @return {ObjectInfo[]}
      */
-  static objectToObjectInfoArray (obj, curDepth = 1, arr = []) {
+  static objectToObjectInfoArray(obj, curDepth = 1, arr = []) {
     var val
 
     for (var key in obj) {
@@ -259,7 +274,7 @@ class BaseObjectHelper {
      * @param {*} value
      * @return {ObjectInfo}
      */
-  static objectInfo (depth, key, value) {
+  static objectInfo(depth, key, value) {
     return {
       depth: depth,
       key: key,
@@ -274,7 +289,7 @@ class BaseObjectHelper {
      * @param {string[]} beforeKeys
      * @return {string[]} added keys
      */
-  static getAddedVariableNames (obj, beforeKeys) {
+  static getAddedVariableNames(obj, beforeKeys) {
     const afterKeys = Object.keys(obj)
     const added = afterKeys.filter(key => beforeKeys.indexOf(key) < 0)
     return added
@@ -287,7 +302,7 @@ class BaseObjectHelper {
      * @param {string[]} beforeKeys
      * @return {string[]} removed keys
      */
-  static getRemovedVariableNames (obj, beforeKeys) {
+  static getRemovedVariableNames(obj, beforeKeys) {
     const afterKeys = Object.keys(obj)
     const removed = beforeKeys.filter(key => afterKeys.indexOf(key) < 0)
     return removed
@@ -296,11 +311,11 @@ class BaseObjectHelper {
   /**
      * Returns object with only desired keys
      *
-     * @param {Object} obj
+     * @param {Dictionary} obj
      * @param {string[]} keys
      * @return {Object}
      */
-  static filterObjectVariables (obj, keys) {
+  static filterObjectVariables(obj, keys) {
     /**
          * @type {Object<string, *>}
          */
@@ -315,11 +330,12 @@ class BaseObjectHelper {
   /**
      * Globalizes(sets to window) all shallow data in object
      *
-     * @param {Object} obj
+     * @param {Dictionary} obj
      */
-  static globalize (obj) {
+  static globalize(obj) {
     for (var key in obj) {
-      if (window[key]) {
+      if (key in window) {
+        // @ts-ignore: Setting window
         window[key] = obj[key]
       }
     }
@@ -328,11 +344,11 @@ class BaseObjectHelper {
   /**
      * Rename object key
      *
-     * @param {Object} obj
+     * @param {Dictionary} obj
      * @param {String} oldKey
      * @param {String} newKey
      */
-  static renameObjectKey (obj, oldKey, newKey) {
+  static renameObjectKey(obj, oldKey, newKey) {
     if (oldKey !== newKey) {
       const descriptor = Object.getOwnPropertyDescriptor(obj, oldKey)
       if (descriptor) {
@@ -347,27 +363,31 @@ class BaseObjectHelper {
   /**
      * Diffs 2 objects and gets object of change information
      *
-     * @param {object} oldObj
-     * @param {object} newObj
-     * @return {Object} Changes. See source.
+     * @param {Dictionary} oldObj
+     * @param {Dictionary} newObj
+     * @return {Dictionary} Changes. See source.
      */
-  static getKeyChanges (oldObj, newObj) {
+  static getKeyChanges(oldObj, newObj) {
     /**
          * Also array allowed. Anything with keys ok.
-         * @type {object}
-         * @property {Object<string,*>} added
-         * @property {Object<string,*>} updated
-         * @property {Object<string,*>} old
-         * @property {Object<string,*>} deleted
+         * @typedef {object} Changes
+         * @property {Dictionary} added
+         * @property {Dictionary} updated
+         * @property {Dictionary} old
+         * @property {Dictionary} deleted
          */
-    var changes = {
+
+    /**
+     * @type {Changes}
+     */
+    const changes = {
       added: {}, // New value
       updated: {}, // New value
       old: {}, // Old value
       deleted: {} // Old value
     }
 
-    var key
+    let key
     for (key in oldObj) {
       // Deleted
       if (!newObj || !Object.prototype.hasOwnProperty.call(newObj, key)) {
@@ -395,7 +415,7 @@ class BaseObjectHelper {
      * @param {Function|undefined} onError
      * @return {String}
      */
-  static objectToReadableString (obj, onError = undefined) { // TODO: Make actually readable
+  static objectToReadableString(obj, onError = undefined) { // TODO: Make actually readable
     var str = ''
     try {
       var tempStr = JSON.stringify(obj)
@@ -415,33 +435,40 @@ class BaseObjectHelper {
      * Starts watching object property.
      * Returns object for handling watching including stopping watching.
      *
-     * @param {Object} obj
+     * @param {Dictionary} obj
      * @param {String} key
-     * @param {WatchOptions} options
+     * @param {Partial<WatchOptions>} options
      * @return {WatchObject} watch object
      * @example See comments in code.
      */
-  static watchObjectProperty (obj, key, options = {}) {
+  static watchObjectProperty(obj, key, options = {}) {
     /*
-                Usage:
-                var usages = [];
-                var obj = {};
-                var returnObj = watchObjectProperty(obj, 'a', {
-                    get: function(){
-                    usages.push(['get', this]);
-                    return obj['a'];
-                    },
-                    set: function(val){
-                    usages.push(['set', this]);
-                    return val;
-                    }
-                });
-                var test = obj['a'];
-                obj['a'] = 1;
-                */
+      Usage:
+      var usages = [];
+      var obj = {};
+      var returnObj = watchObjectProperty(obj, 'a', {
+          get: function(){
+          usages.push(['get', this]);
+          return obj['a'];
+          },
+          set: function(val){
+          usages.push(['set', this]);
+          return val;
+          }
+      });
+      var test = obj['a'];
+      obj['a'] = 1;
+      */
 
-    var get = options.get || function () {}
-    var set = options.set || function () {}
+    var get = options.get || function () { }
+    var set = options.set || function () { }
+    /**
+     * @type {GetterSetter}
+     */
+    const completeOptions = {
+      get,
+      set
+    }
 
     /**
          * @type {WatchObject}
@@ -450,7 +477,7 @@ class BaseObjectHelper {
       obj: obj,
       key: key,
       initialValue: obj[key], // May change depending on setting and type
-      options: options,
+      options: completeOptions,
 
       stop: function () {
         Object.defineProperty(obj, key, {

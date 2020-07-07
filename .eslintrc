@@ -12,6 +12,9 @@
     "rules": {
         "no-console": "off",
         "no-redclare": "warn",
-        "no-unused": "warn"
+        "no-unused": "warn",
+        "no-use-before-define": ["off", {
+            "variables": false
+        }]
     }
 }

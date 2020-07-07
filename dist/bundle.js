@@ -1,3 +1,615 @@
+(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+class BaseArrayHelper {
+  /**
+     * Searches object array for value.
+     *
+     * @param {object[]} arr
+     * @param {String} key
+     * @param {*} val
+     * @return {object[]} array of objects with match
+     */
+  static searchObjectArray (arr, key, val) {
+    var found = []
+    var obj
+    for (var i = 0; i < arr.length; i++) {
+      obj = arr[i]
+
+      if (obj[key] === val) {
+        found.push(obj)
+      }
+    }
+
+    return found
+  }
+
+  /**
+     * Converts 1d array to object.
+     * Array values are used as keys, values are set with defaultVal.
+     *
+     * @param {string[]} arr
+     * @param {String} defaultVal
+     * @return {Object<string|number, *>}
+     */
+  static singleDimensionArrayToObject (arr, defaultVal = '') {
+    /**
+         * @type {Object<string|number, *>}
+         */
+    var obj = {}
+    /**
+             * @type {string|number}
+             */
+    var key
+    for (var i = 0; i < arr.length; i++) {
+      key = arr[i]
+      obj[key] = defaultVal
+    }
+
+    return obj
+  }
+
+  /**
+     * Converts 2d array to array of objects.
+     * Useful for settings using objects: [[1,2,3,4], ...], ['a','b','c','d'] => [{a: 1, b: 2, c: 3, d: 4}, ...]
+     *
+     * @param {string[]} arr
+     * @param {Array<string|number>} keys
+     * @return {Object<string, *>[]}
+     */
+  static arrayListToObjectList (arr, keys) {
+    return arr.map(function (val) {
+      /**
+             * @type {Object<string, *>}
+             */
+      var obj = {}
+      for (var i = 0; i < val.length; i++) {
+        obj[keys[i]] = val[i]
+      }
+      return obj
+    })
+  }
+
+  /**
+     * Converts array of words to camel case string
+     *
+     * @param {string[]} arr
+     * @return {String}
+     */
+  static arrayToCamelCase (arr) {
+    var str = ''
+    var tempStr
+
+    for (var i = 0; i < arr.length; i++) {
+      tempStr = arr[i]
+
+      if (i > 0) {
+        tempStr = tempStr.substr(0, 1).toUpperCase() + tempStr.substr(1)
+      }
+
+      str += tempStr
+    }
+
+    return str
+  }
+
+  /**
+     * Builds string from array + format
+     *
+     * @param {string[]} arr
+     * @param {String} format
+     * @return {String}
+     */
+  static buildDelimiterString (arr, format) {
+    var cHandle = null
+
+    if (format === 'camelCase') {
+      cHandle = BaseArrayHelper.arrayToCamelCase
+    } else {
+      /**
+             * @param {string[]} arr
+             * @return {string}
+             */
+      cHandle = function (arr) {
+        var del = format
+        return arr.join(del)
+      }
+    }
+
+    return cHandle(arr)
+  }
+
+  /**
+     * Creates unique array
+     *
+     * @param {*[]} arr
+     * @return {*[]}
+     */
+  static uniqueArray (arr) {
+    return arr.filter((value, index, array) => {
+      return array.indexOf(value) === index
+    })
+  }
+}
+
+module.exports = BaseArrayHelper
+
+},{}],2:[function(require,module,exports){
+/**
+ * @typedef {Object<string, *>} Dictionary
+ */
+
+/**
+ * @typedef {object} ObjectInfo
+ * @property {number} depth
+ * @property {string} key
+ * @property {*} value
+ */
+
+/**
+ * @typedef {object} KeyValue
+ * @property {null|string} key
+ * @property {null|*} value
+ */
+
+/**
+ * @typedef {object} GetterSetter
+ * @property {function():*} get
+ * @property {function(*):void} set
+ */
+
+/**
+ * @typedef {GetterSetter} WatchOptions
+ */
+
+/**
+ * @typedef {object} WatchObject
+ * @property {object} obj
+ * @property {string} key
+ * @property {*} initialValue
+ * @property {WatchOptions} options
+ * @property {function():void} stop
+ */
+
+class BaseObjectHelper {
+  /**
+     * Copies data without references.
+     * Not perfect solution, but is most basic.
+     * var copy = Object.assign({}, obj);//seems to keep inner references.
+     * Does not work for circular references.
+     * Does not work for __proto__ inheriting variables(Usually native class objects) and functions.
+     * @param {Object} obj
+     */
+  static copyObject (obj) {
+    try {
+      return JSON.parse(JSON.stringify(obj))
+    } catch (err) {
+      return {}
+    }
+  }
+
+  /**
+     * For extracting shallow data from object.
+     *
+     * @param {Dictionary} obj
+     * @return {Dictionary} shallow copy
+     */
+  static copyObjectData (obj) {
+    /**
+         * @type {Dictionary}
+         */
+    var copy = {}
+    for (var key in obj) {
+      if (!BaseObjectHelper.isCommonObject(obj[key])) {
+        copy[key] = obj[key]
+      }
+    }
+
+    return copy
+  }
+
+  /**
+     * Applies shallow object data one way between objects.
+     * Allows for conditional handling.
+     *
+     * @param {Dictionary} from
+     * @param {Dictionary} to
+     * @param {function(string, Dictionary, Dictionary):boolean} condition
+     * @return {Dictionary} to
+     */
+  static applyObj (from, to, condition) {
+    // Check
+    if (!BaseObjectHelper.isObject(from) || !BaseObjectHelper.isObject(to)) {
+      throw new Error('Failed object check')
+    }
+
+    for (var key in from) {
+      // Condition handling
+      if (condition && !condition(key, from, to)) {
+        continue
+      }
+
+      // Set
+      to[key] = from[key]
+    }
+
+    return to
+  }
+
+  /**
+     * Gets value at index of keys in object.
+     *
+     * @param {Dictionary} obj
+     * @param {number} index
+     * @return {Object} {key: key, value: val}
+     */
+  static getObjectKeyValueAtIndex (obj, index) {
+    var keys = Object.keys(obj)
+    /**
+             * @type {KeyValue}
+             */
+    var keyValue = {
+      key: null,
+      value: null
+    }
+
+    keyValue.key = keys[index]
+    keyValue.value = obj[keyValue.key]
+
+    return keyValue
+  }
+
+  /**
+     * Same keys as in: for(var key in obj)
+     * As opposed to usual Object.keys.
+     * Does not use hasOwnProperty
+     *
+     * @param {Object} obj
+     * @return {string[]} array of keys
+     */
+  static getObjectKeys (obj) {
+    // Same keys as in: for(var key in obj).
+    // Does not use hasOwnProperty.
+
+    /**
+         * @type {string[]}
+         */
+    var keys = []
+    for (var key in obj) {
+      keys.push(key)
+    }
+
+    return keys
+  }
+
+  /**
+     * Expands and inserts data of common object into common object.
+     * Common object: Array or normal object
+     *
+     * @param {Array<*>|Dictionary} obj
+     * @param {Array<*>|Dictionary} parentObj
+     * @param {Number} insertIndex
+     * @return {Array<*>|Dictionary} parentObj
+     */
+  static expandCommonObjectIntoObject (obj, parentObj, insertIndex = 0) {
+    if (Array.isArray(parentObj)) { // TODO: Array type guard.
+      for (let i = 0; i < obj.length; i++) {
+        let key = (insertIndex + i)
+
+        parentObj.splice(key, 0, obj[i]) // Moves rest forwards
+      }
+    } else {
+      for (let key in obj) {
+        parentObj[key] = obj[key]
+      }
+    }
+
+    return parentObj
+  }
+
+  /**
+     * Log each element in object on single line.
+     * Naming confusing, should change!!
+     *
+     * @param {Dictionary} obj
+     */
+  static logObjectOnSingleLine (obj) {
+    var str = ''
+    var LF = '\n'
+    for (var key in obj) {
+      str += (key + ': ' + String(obj[key]) + LF)
+    }
+
+    console.log(str)
+  }
+
+  /**
+     * Checks if is object of map style.
+     *
+     * @param {*} obj
+     * @return {Boolean}
+     */
+  static isObject (obj) {
+    if (
+      typeof obj === 'object' &&
+            obj !== null &&
+            !Array.isArray(obj)
+    ) {
+      return true
+    } else {
+      return false
+    }
+  }
+
+  /**
+     * Checks if is map object but not from DOM.
+     *
+     * @param {Object} obj
+     * @return {Boolean}
+     */
+  static isNonDomObject (obj) {
+    if (BaseObjectHelper.isObject(obj) && !obj.nodeType) { // TODO: nodeType typeguard
+      return true
+    } else {
+      return false
+    }
+  }
+
+  /**
+     * Checks if is traversible object(map object or array)
+     *
+     * @param {*} obj
+     * @return {Boolean}
+     */
+  static isCommonObject (obj) {
+    return (BaseObjectHelper.isObject(obj) || Array.isArray(obj))
+  }
+
+  /**
+     * Object with possible nesting => array of objects with information.
+     *
+     * @param {Object} obj
+     * @param {Number} curDepth
+     * @param {ObjectInfo[]} arr
+     * @return {ObjectInfo[]}
+     */
+  static objectToObjectInfoArray (obj, curDepth = 1, arr = []) {
+    var val
+
+    for (var key in obj) {
+      if (BaseObjectHelper.isCommonObject(obj[key])) { // Nested objects
+        BaseObjectHelper.objectToObjectInfoArray(obj[key], (curDepth + 1), arr)
+      } else { // Value
+        val = obj[key]
+        arr.push(BaseObjectHelper.objectInfo(curDepth, key, val))
+      }
+    }
+
+    return arr
+  }
+
+  /**
+     * Information about object value
+     *
+     * @param {Number} depth Starting at 1
+     * @param {*} key
+     * @param {*} value
+     * @return {ObjectInfo}
+     */
+  static objectInfo (depth, key, value) {
+    return {
+      depth: depth,
+      key: key,
+      value: value
+    }
+  }
+
+  /**
+     * Diff(added) of object keys
+     *
+     * @param {Object} obj
+     * @param {string[]} beforeKeys
+     * @return {string[]} added keys
+     */
+  static getAddedVariableNames (obj, beforeKeys) {
+    const afterKeys = Object.keys(obj)
+    const added = afterKeys.filter(key => beforeKeys.indexOf(key) < 0)
+    return added
+  }
+
+  /**
+     * Diff(removed) of object keys
+     *
+     * @param {Object} obj
+     * @param {string[]} beforeKeys
+     * @return {string[]} removed keys
+     */
+  static getRemovedVariableNames (obj, beforeKeys) {
+    const afterKeys = Object.keys(obj)
+    const removed = beforeKeys.filter(key => afterKeys.indexOf(key) < 0)
+    return removed
+  }
+
+  /**
+     * Returns object with only desired keys
+     *
+     * @param {Object} obj
+     * @param {string[]} keys
+     * @return {Object}
+     */
+  static filterObjectVariables (obj, keys) {
+    /**
+         * @type {Object<string, *>}
+         */
+    var filtered = {}
+    for (var i = 0; i < keys.length; i++) {
+      filtered[keys[i]] = obj[keys[i]]
+    }
+
+    return filtered
+  }
+
+  /**
+     * Globalizes(sets to window) all shallow data in object
+     *
+     * @param {Object} obj
+     */
+  static globalize (obj) {
+    for (var key in obj) {
+      if (window[key]) {
+        window[key] = obj[key]
+      }
+    }
+  }
+
+  /**
+     * Rename object key
+     *
+     * @param {Object} obj
+     * @param {String} oldKey
+     * @param {String} newKey
+     */
+  static renameObjectKey (obj, oldKey, newKey) {
+    if (oldKey !== newKey) {
+      const descriptor = Object.getOwnPropertyDescriptor(obj, oldKey)
+      if (descriptor) {
+        Object.defineProperty(obj, newKey, descriptor)
+        delete obj[oldKey]
+      } else {
+        throw new Error('Failed to find descriptor.')
+      }
+    }
+  }
+
+  /**
+     * Diffs 2 objects and gets object of change information
+     *
+     * @param {object} oldObj
+     * @param {object} newObj
+     * @return {Object} Changes. See source.
+     */
+  static getKeyChanges (oldObj, newObj) {
+    /**
+         * Also array allowed. Anything with keys ok.
+         * @type {object}
+         * @property {Object<string,*>} added
+         * @property {Object<string,*>} updated
+         * @property {Object<string,*>} old
+         * @property {Object<string,*>} deleted
+         */
+    var changes = {
+      added: {}, // New value
+      updated: {}, // New value
+      old: {}, // Old value
+      deleted: {} // Old value
+    }
+
+    var key
+    for (key in oldObj) {
+      // Deleted
+      if (!newObj || !Object.prototype.hasOwnProperty.call(newObj, key)) {
+        changes.deleted[key] = oldObj[key]
+      } else if (newObj && oldObj[key] !== newObj[key]) { // Edited
+        changes.old[key] = oldObj[key]
+        changes.updated[key] = newObj[key]
+      }
+    }
+
+    for (key in newObj) {
+      if (oldObj && !Object.prototype.hasOwnProperty.call(oldObj, key)) {
+        changes.added[key] = newObj[key]
+      }
+    }
+
+    return changes
+  }
+
+  /**
+     * Object to readable string.
+     * Should make as readable as possible.
+     *
+     * @param {Object} obj
+     * @param {Function|undefined} onError
+     * @return {String}
+     */
+  static objectToReadableString (obj, onError = undefined) { // TODO: Make actually readable
+    var str = ''
+    try {
+      var tempStr = JSON.stringify(obj)
+      str = tempStr
+    } catch (err) {
+      if (onError) {
+        onError(err)
+      } else {
+        console.log(err)
+      }
+    }
+
+    return str
+  }
+
+  /**
+     * Starts watching object property.
+     * Returns object for handling watching including stopping watching.
+     *
+     * @param {Object} obj
+     * @param {String} key
+     * @param {WatchOptions} options
+     * @return {WatchObject} watch object
+     * @example See comments in code.
+     */
+  static watchObjectProperty (obj, key, options = {}) {
+    /*
+                Usage:
+                var usages = [];
+                var obj = {};
+                var returnObj = watchObjectProperty(obj, 'a', {
+                    get: function(){
+                    usages.push(['get', this]);
+                    return obj['a'];
+                    },
+                    set: function(val){
+                    usages.push(['set', this]);
+                    return val;
+                    }
+                });
+                var test = obj['a'];
+                obj['a'] = 1;
+                */
+
+    var get = options.get || function () {}
+    var set = options.set || function () {}
+
+    /**
+         * @type {WatchObject}
+         */
+    var returnObj = {
+      obj: obj,
+      key: key,
+      initialValue: obj[key], // May change depending on setting and type
+      options: options,
+
+      stop: function () {
+        Object.defineProperty(obj, key, {
+          get: undefined,
+          set: undefined
+        })
+      }
+    }
+
+    Object.defineProperty(obj, key, {
+      writable: true,
+      configurable: true,
+      enumerable: true,
+      get: get,
+      set: set
+    })
+
+    return returnObj
+  }
+}
+
+module.exports = BaseObjectHelper
+
+},{}],3:[function(require,module,exports){
 /**
  * @typedef {Object<string, *>} Dictionary
  */
@@ -31,10 +643,6 @@
 
 /**
  * @typedef {[number, number]} ArrayRange [startIndex, endIndex]
- */
-
-/**
- * @typedef {'readAsArrayBuffer'|'readAsBinaryString'|'readAsDataURL'|'readAsText'} FILE_READER_METHOD_NAMES
  */
 
 /**
@@ -79,7 +687,7 @@ function stringPosition() {
  * @property {string} title
  * @property {function|null} beforeLog
  * @property {function|null} afterLog
- * @property {keyof Console} type
+ * @property {string} type
  */
 
 /**
@@ -97,7 +705,7 @@ function logOptions() {
 
 /**
  * @typedef {object} AsyncHandlerItem
- * @property {null|(function(...*):void)} handle
+ * @property {null|function()} handle
  * @property {*[]} args
  * @property {number} callbackParamIndex
  * @property {number} index
@@ -179,7 +787,7 @@ class BaseUtility {
      */
     static asyncCheck(callback) {
         var ms = Math.ceil(Math.random() * 10)
-        window.setTimeout(function () {
+        window.setTimeout(function() {
             const returnVal = 'check ok'
             callback(returnVal)
         }, ms)
@@ -197,17 +805,14 @@ class BaseUtility {
     static promisify(handle, args, resolveIndex) {
         var oldHandle = handle
         var oldCallback = args[resolveIndex]
-        var promise = new Promise((resolve) => {
-            /**
-             * @param  {...any} args 
-             */
-            args[resolveIndex] = function (...args) {
-                resolve(...args)
+        var promise = new Promise(function(resolve) {
+            args[resolveIndex] = function(...args) {
+                resolve.apply(this, args)
             }
 
             oldHandle.apply(this, args)
         })
-        promise.then((successValue) => {
+        promise.then(function(successValue) {
             oldCallback(successValue)
         })
 
@@ -216,7 +821,7 @@ class BaseUtility {
 
     /**
      * Handles multiple async functions.
-     * TODO: Needs checking!!(handle, status.current positioning looks iffy.)
+     * Needs checking!!(handle, status.current positioning looks iffy.)
      *
      * @param {AsyncHandlerItem[]} arr Array of items. See code.
      * @param {Function} onEnd
@@ -240,7 +845,7 @@ class BaseUtility {
             returned: []
         }
 
-        var handle = function () {
+        var handle = function() {
             var item = arr[status.current]
 
             // Finished
@@ -251,20 +856,17 @@ class BaseUtility {
 
             item.index = status.current
 
-            item.args[item.callbackParamIndex] = function () {
+            item.args[item.callbackParamIndex] = function() {
                 status.returned[item.index] = arguments
 
                 handle()
             }
 
-            if (item.handle) {
-                // @ts-ignore
-                item.handle(...item.args) // TODO: Why expecting at least 1 argument?
-            }
+            item.handle.apply(this, item.args)
 
             status.current++
 
-            return true
+                return true
         }
 
         // Start execution
@@ -384,17 +986,15 @@ class BaseUtility {
             return false
         }
 
-        /**
-         * @type {keyof Console}
-         */
+        // Type
         var type = 'log'
-        if (options.type && options.type in window.console) {
+        if (options.type && window.console[type]) {
             type = options.type
         }
 
         // Prettify
         if (options.prettify) {
-            options.beforeLog = function () {
+            options.beforeLog = function() {
                 window.console.log('')
             }
         }
@@ -451,12 +1051,10 @@ class BaseUtility {
      * @param {String} url
      * @return {String} file name
      */
-    static getFileName(url) {
-        const f = BaseUtility.failOnFalsy
-        const noFragment = f(url.split('#')).shift()
-        const noArguments = f(noFragment.split('?')).shift()
-        const onlyLastRoute = f(noArguments.split('/')).pop()
-        return onlyLastRoute
+    static getFileName(url) { // TODO: failOnFalsy for each split.
+        return url.split('#').shift() // No fragment
+            .split('?').shift() // No arguments
+            .split('/').pop() // Only last route
     }
 
     /**
@@ -541,17 +1139,15 @@ class BaseUtility {
 
         // EXECUTE LINK
         link.click()
-        /*
-            //Doesn't work in Firefox
-            var click = document.createEvent("Event");
-            click.initEvent("click", true, true);
-            link.dispatchEvent(click);
-            */
+            /*
+                //Doesn't work in Firefox
+                var click = document.createEvent("Event");
+                click.initEvent("click", true, true);
+                link.dispatchEvent(click);
+                */
 
         // Remove Link
-        if (link.parentElement) {
-            link.parentElement.removeChild(link)
-        }
+        link.parentElement.removeChild(link) // TODO: failOnFalsy(link.parentElement)
     }
 
     /**
@@ -566,10 +1162,7 @@ class BaseUtility {
         var obj = {}
 
         try {
-            const tempObj = BaseUtility.parseJson(data)
-            if (!tempObj) {
-                throw new Error('ParseJSON failed')
-            }
+            var tempObj = BaseUtility.parseJson(data)
             obj = tempObj
         } catch (err) {
             if (onError) {
@@ -612,7 +1205,7 @@ class BaseUtility {
      * Returns null on bad.
      *
      * @param {String} str
-     * @return {Object|null}
+     * @return {Object}
      */
     static parseJson(str) {
         if (!window.JSON) {
@@ -657,8 +1250,8 @@ class BaseUtility {
         var promises = []
         for (var i = 0; i < urls.length; i++) {
             promises.push(
-                new Promise(function (resolve) {
-                    BaseUtility.loadFile(urls[i], function (data) {
+                new Promise(function(resolve) {
+                    BaseUtility.loadFile(urls[i], function(data) {
                         if (onData) {
                             data = onData(data)
                         }
@@ -676,12 +1269,12 @@ class BaseUtility {
      *
      * @param {String} url
      * @param {function(*):void} callback
-     * @param {(function(Error|any):void)|undefined} onError
+     * @param {Function|undefined} onError
      * @return {XMLHttpRequest}
      */
     static loadFile(url, callback, onError = undefined) {
         var xhttp = new window.XMLHttpRequest()
-        xhttp.onreadystatechange = function () {
+        xhttp.onreadystatechange = function() {
             if (this.readyState === 4 && this.status === 200) {
                 callback(xhttp.response)
             }
@@ -698,7 +1291,7 @@ class BaseUtility {
     /**
      * Handles callback for functions that may have a callback.
      *
-     * @param {function(...*):*} callback
+     * @param {function(boolean, XMLHttpRequest):*} callback
      * @param {*[]} args
      */
     static handleCallback(callback, args) {
@@ -766,8 +1359,8 @@ class BaseUtility {
 
         var returnStr = ''
         var curIndex = 0 // Same as done.
-        // var remaining
-        // var length = str.length
+            // var remaining
+            // var length = str.length
 
         for (var i = 0; i < lenArr.length; i++) {
             // Remaining digits
@@ -796,7 +1389,7 @@ class BaseUtility {
      * @param {Function} callback
      */
     static getCurrentLocation(callback) {
-        return navigator.geolocation.getCurrentPosition(function (pos) {
+        return navigator.geolocation.getCurrentPosition(function(pos) {
             callback(pos.coords.latitude, pos.coords.longitude)
         })
     }
@@ -806,47 +1399,27 @@ class BaseUtility {
      *
      * @param {InputEvent|DragEvent} event
      * @param {Function} callback
-     * @param {{method: FILE_READER_METHOD_NAMES}} options
+     * @param {Object} options
      * @return {FileReader}
      */
     static loadFileInput(event, callback, options) {
-        const noFilesError = () => {
-            throw new Error('No files found')
-        }
-        /**
-         * @type {File|null}
-         */
         var file = null
-        if (event instanceof InputEvent) {
-            if (!(event.target instanceof HTMLInputElement)) {
-                return noFilesError()
-            }
-            if (!event.target.files || event.target.files.length === 0) {
-                return noFilesError()
-            }
+        if (!event.dataTransfer && event.target.files.length > 0) { // InputEvent
             file = event.target.files[0]
+        } else if (event.dataTransfer && event.dataTransfer.files.length > 0) { // DragEvent
+            file = event.dataTransfer.files[0]
         } else {
-            if (!(event.dataTransfer)) {
-                return noFilesError()
-            }
-            let item = event.dataTransfer.files.item(0)
-            if (!item) {
-                return noFilesError()
-            }
-            file = item
-        }
-        if (!file) {
-            return noFilesError()
+            throw new Error('No files found')
         }
 
         var reader = new window.FileReader()
-        reader.addEventListener('load', (event) => {
+        reader.onload = function(event) {
             var data = event.target ? event.target.result : undefined
             callback(data)
-        })
-        reader.addEventListener('error', (err) => {
+        }
+        reader.onerror = function(err) {
             console.log(err)
-        })
+        }
 
         reader[options.method](file)
 
@@ -995,7 +1568,7 @@ class BaseUtility {
      * Removed: @param {Boolean} optionsAbstract ordered default false because order not usually important.
      * @param {string[]} arr array of link href urls.
      * @param {function(string, HTMLElement):*} handle
-     * @param {Partial<MultipleUrlLoadingOptions>} options
+     * @param {MultipleUrlLoadingOptions} options
      * @return {Promise<*[]>}
      */
     static loadAbstractUrls(arr, handle, options = {}) {
@@ -1077,7 +1650,7 @@ class BaseUtility {
         var script = document.createElement('script')
         script.setAttribute('type', 'text/javascript')
         script.innerHTML = data
-        script.addEventListener('load', function () {
+        script.addEventListener('load', function() {
             if (onLoad) {
                 onLoad(script)
             }
@@ -1195,10 +1768,10 @@ class BaseUtility {
             cHandle = BaseUtility.camelCaseToArray
         } else {
             var del = format
-            /**
-             * @param {string} str
-             */
-            cHandle = function (str) {
+                /**
+                 * @param {string} str
+                 */
+            cHandle = function(str) {
                 return str.split(del)
             }
         }
@@ -1268,9 +1841,6 @@ class BaseUtility {
     static getNumberSimilarity(num1, num2) {
         var max = BaseUtility.getMax(num1, num2)
         var min = BaseUtility.getMin(num1, num2)
-        if (min === null || max === null) {
-            throw new Error('Can get number similarity for invalid number')
-        }
         var diff = max - min
         var bounds = Math.abs(max) > Math.abs(min) ? Math.abs(max) : Math.abs(min) // Negative OK
         var signedBounds = min < 0 && max > 0 ? bounds * 2 : bounds // Double bounds for NEGATIVE AND POSITIVE
@@ -1282,7 +1852,7 @@ class BaseUtility {
      * Gets max number from unlimited number of parameters
      *
      * @param {number[]} args Array of numbers
-     * @return {Number|null}
+     * @return {Number}
      */
     static getMax(...args) {
         var max = null
@@ -1299,7 +1869,7 @@ class BaseUtility {
      * Gets min number from unlimited number of parameters
      *
      * @param {number[]} args Array of numbers
-     * @return {Number|null}
+     * @return {Number}
      */
     static getMin(...args) {
         var min = null
@@ -1434,7 +2004,7 @@ class BaseUtility {
         if (info.stack.substr(0, 'Error'.length) === 'Error') {
             var s = info.stack
             var lines = s.split('\n')
-            lines.forEach(function (line, key) {
+            lines.forEach(function(line, key) {
                 key = Number(key)
 
                 if (key === 0) {
@@ -1445,13 +2015,13 @@ class BaseUtility {
                  * @type {StackPart}
                  */
                 var stackPart = {
-                    function: '',
-                    lineNumber: null,
-                    columnNumber: null
-                }
-                /**
-                 * @type {number}
-                 */
+                        function: '',
+                        lineNumber: null,
+                        columnNumber: null
+                    }
+                    /**
+                     * @type {number}
+                     */
                 var startIndex = line.indexOf('at') + 'at '.length // First index
                 var lineInfo = line.substr(startIndex)
                 var parts = lineInfo.split(' ')
@@ -1482,8 +2052,8 @@ class BaseUtility {
      * Loops class instance functions.
      * Ignores constructor.
      *
-     * @param {Dictionary} classInstance
-     * @param {function(function(...*):any, string, Object<string, *>):void} onFunction
+     * @param {Object} classInstance
+     * @param {Function} onFunction
      */
     static loopClassFunctions(classInstance, onFunction) {
         BaseUtility.loopClass(classInstance, (name) => {
@@ -1496,7 +2066,7 @@ class BaseUtility {
     /**
      * Loops class instance properties.
      *
-     * @param {Dictionary} classInstance
+     * @param {Object} classInstance
      * @param {Function} onProperty
      */
     static loopClassProperties(classInstance, onProperty) {
@@ -1513,14 +2083,14 @@ class BaseUtility {
 
     /**
      * @param {object} classInstance
-     * @param {function(string):void} onVariable
+     * @param {function} onVariable
      */
     static loopClass(classInstance, onVariable) {
         for (let obj = classInstance; obj; obj = Object.getPrototypeOf(obj)) {
             // obj returning function under certain circumstances and leading to arguments being referenced below.
             // This causes an error in strict mode, so check added below.
             // getPrototypeOf returns function on static classes.
-            // TODO: No need to loop past classInstance. Fix later.
+            // ?? No need to loop past classInstance. Fix later.
             if (typeof obj !== 'object') {
                 console.warn('type is not object. Check that static class was not passed.')
                 continue
@@ -1545,24 +2115,24 @@ class BaseUtility {
      * TODO: 
      */
     static loopStaticClassMethods() {
-        // TODO
+
     }
 
     /**
      * Binds class instance to all functions.
      * Used so no need to worry about using this in classes.
      *
-     * @param {Dictionary} classInstance
+     * @param {Object} classInstance
      */
     static bindClassThis(classInstance) {
-        BaseUtility.loopClassFunctions(classInstance, (value, name) => { // TODO: try with obj instead of same class instance.
+        BaseUtility.loopClassFunctions(classInstance, (value, name, obj) => { // ??try with obj instead of same class instance.
             const variable = classInstance[name]
             classInstance[name] = variable.bind(classInstance)
         })
     }
 
     /**
-     * @param {Dictionary} classInstance
+     * @param {object} classInstance
      * @param {function} constructor
      */
     static applyStaticFunctions(classInstance, constructor) {
@@ -1573,34 +2143,35 @@ class BaseUtility {
     }
 
     /**
-     * @param {*} constructor
+     * @param {function} constructor
      * @return {string[]}
      */
     static getStaticFunctionNames(constructor) {
         return Object.getOwnPropertyNames(constructor)
-            .filter(prop => Object.prototype.hasOwnProperty.call(constructor, prop) && typeof constructor[prop] === 'function')
+            .filter(prop => typeof constructor[prop] === 'function')
     }
 
     /**
-     * @param {*} constructor
+     * @param {function} constructor
+     * @return {object}
      */
     static getStaticFunctions(constructor) {
         const names = BaseUtility.getStaticFunctionNames(constructor)
-        return Object.fromEntries(names.map(name => {
-            return [name, constructor[name]]
-        }))
+        const functions = {}
+        names.forEach(name => {
+            functions[name] = constructor[name]
+        })
+        return functions
     }
 
     /**
      * Automatically performs number operation on each key in object.
      *
      * @param {Object<string, number>[]} objArr Array of objects containing numbers.
+     * @return {Object} Reduced object
      */
     static reduceObjectArray(objArr) {
-        /**
-         * @type {Object<string, number>}
-         */
-        const returnObj = {}
+        let returnObj = {}
         for (let i = 0; i < objArr.length; i++) {
             let obj = objArr[i]
 
@@ -1663,10 +2234,10 @@ class BaseUtility {
      * Detects single mode or array mode by type of events[name]
      * Returns single or array based on single mode type
      *
-     * @param {Dictionary} events
+     * @param {Object} events
      * @param {String} name
      * @param {*} data data passed to event
-     * @param {Partial<EventOptions>} options
+     * @param {EventOptions} options
      * @return {*} Return data(single or array)
      */
     static handleEvent(events, name, data = undefined, options = {}) {
@@ -1723,8 +2294,8 @@ class BaseUtility {
         }
 
         /**
-         * @param {Dictionary} from
-         * @param {Dictionary} to
+         * @param {object} from
+         * @param {object} to
          */
         const mergeEvents = (from, to) => {
             for (let key in from) {
@@ -1781,10 +2352,10 @@ class BaseUtility {
                 const xhr = new window.XMLHttpRequest()
                 xhr.open('GET', url)
                 xhr.responseType = 'blob'
-                xhr.onerror = function (err) {
+                xhr.onerror = function(err) {
                     reject(err)
                 }
-                xhr.onload = function () {
+                xhr.onload = function() {
                     const OK = 200
                     if (xhr.status === OK) {
                         resolve(xhr.response)
@@ -1806,7 +2377,6 @@ class BaseUtility {
      * Caution: Difficult to cancel out of promise, so only should be used for reporting and where can let promise finish.
      * timeout(promise, 1000).catch(console.error);
      *
-     * @param {Promise<*>} promise
      * @param {Number} ms
      * @return {Promise<*>}
      * @see https://stackoverflow.com/questions/21485545/is-there-a-way-to-tell-if-an-es6-promise-is-fulfilled-rejected-resolved?noredirect=1&lq=1
@@ -1884,22 +2454,18 @@ class BaseUtility {
                 Promise.resolve([])
             }
 
-            /**
-             * @type {*[]}
-             */
             const responses = []
-            /**
-             * @type {Promise<void|any[]>}
-             */
-            let p = Promise.resolve([])
+            let p = Promise.resolve()
             arr.forEach((handle, index) => {
                 p = p.then(handle).then(response => {
                     responses[index] = response
                 })
             })
-            return /** @type {Promise<*[]>} */ (p.then(() => {
+            p = p.then(() => {
                 return responses
-            }))
+            })
+
+            return p
         } else {
             /**
              * @type {Promise<*>[]}
@@ -1986,25 +2552,25 @@ class BaseUtility {
 
         // Ranges in percentages
         const ranges = [{
-            key: 'VERY_LIKELY',
-            val: 2
-        },
-        {
-            key: 'LIKELY',
-            val: 5
-        },
-        {
-            key: 'PROBABLY',
-            val: 10
-        },
-        {
-            key: 'MAYBE',
-            val: 15
-        },
-        {
-            key: 'UNLIKELY',
-            val: Infinity
-        }
+                key: 'VERY_LIKELY',
+                val: 2
+            },
+            {
+                key: 'LIKELY',
+                val: 5
+            },
+            {
+                key: 'PROBABLY',
+                val: 10
+            },
+            {
+                key: 'MAYBE',
+                val: 15
+            },
+            {
+                key: 'UNLIKELY',
+                val: Infinity
+            }
         ]
         const HIGHEST_TRUE_INDEX = 1 // LIKELY. Set low to make sure properly minimized.
 
@@ -2035,7 +2601,7 @@ class BaseUtility {
             }
         })
 
-        const level = (firstPassIndex !== null) ? ranges[Number(firstPassIndex)].key : 'UNLIKELY'
+        const level = (firstPassIndex !== null) ? ranges[String(firstPassIndex)].key : 'UNLIKELY'
         const bool = (firstPassIndex !== null) ? firstPassIndex <= HIGHEST_TRUE_INDEX : false
 
         /**
@@ -2078,7 +2644,7 @@ class BaseUtility {
         check(window.location.href)
 
         // Future
-        window.addEventListener('hashchange', function (event) {
+        window.addEventListener('hashchange', function(event) {
             check(event.newURL)
         })
     }
@@ -2118,7 +2684,7 @@ class BaseUtility {
      * This function aims to replace multiple parts of a same string string quickly.
      * Ranges of indexes should NOT overlap.
      * @param {String} string
-     * @param {[string, number, number][]} indexes [['a', 1, 3], ['b', 5, 8], ...]
+     * @param {number[]} indexes
      * @param {Boolean} sortRequired If false, expects "start" index from low to high.
      * @return {String} replaced string
      */
@@ -2138,22 +2704,23 @@ class BaseUtility {
         }
 
         const length = indexes.length
-        let curEndIndex = 0
+        let indexInfo
         let replacedString = ''
+        let startIndex = 0
         for (let i = 0; i < length; i++) {
-            const indexInfo = indexes[i]
-            const startIndex = indexInfo[START_INDEX_KEY]
-            const endIndex = indexInfo[END_INDEX_KEY]
-            const value = indexInfo[VALUE_KEY]
+            indexInfo = indexes[i]
 
+            let endIndex = indexInfo[START_INDEX_KEY] // TODO: END_INDEX_KEY check!!
+            let value = indexInfo[VALUE_KEY]
             replacedString += string.substring(startIndex, endIndex) + value // Not including end index
 
-            curEndIndex = endIndex
+            // Update next start index
+            startIndex = endIndex + 1
         }
 
         // Remaining
-        if (curEndIndex < string.length) {
-            replacedString += string.substr(curEndIndex)
+        if (startIndex < string.length) {
+            replacedString += string.substr(startIndex)
         }
 
         return replacedString
@@ -2194,26 +2761,25 @@ class BaseUtility {
      * @see https://developers.google.com/web/tools/lighthouse/audits/noopener
      */
     static fixPageAnchorTagSecurity() {
-        const anchorList = [...Array.from(document.querySelectorAll('a'))]
+        const anchorList = [...document.querySelectorAll('a')]
         anchorList.forEach(a => {
             BaseUtility.setSpaceDelimitedElementAttribute(a, 'rel', ['noopener', 'noreferrer'])
         })
     }
 
     /**
-     * Sets element attribute like so while allowing existing: rel="val1 val2 valn ..."
      * @param {HTMLElement} element
      * @param {string} attribute
      * @param {string[]} values
      */
     static setSpaceDelimitedElementAttribute(element, attribute, values = []) {
-        let attributeValues = BaseUtility.failOnFalsy(element.getAttribute(attribute)).split(' ')
+        let attributeValues = element.getAttribute(attribute).split(' ') // TODO: failOnFalsy
         values.forEach(value => {
             if (!attributeValues.includes(value)) {
                 attributeValues.push(value)
             }
         })
-        element.setAttribute(attribute, attributeValues.join(' '))
+        element.setAttribute(attributeValues.join(' ')) // TODO: Requires two values. Fix spec and fix.
     }
 
     /**
@@ -2236,16 +2802,6 @@ class BaseUtility {
         const before = string.substr(START_INDEX, beforeLength)
         const after = string.substr(fromIndex + length)
         return `${before}${replacement}${after}`
-    }
-
-    /**
-     * @param {*} value
-     */
-    static failOnFalsy(value) {
-        if (!value) {
-            throw new Error(`Unallowed falsy value`)
-        }
-        return value
     }
 
     /**
@@ -2323,7 +2879,7 @@ class BaseUtility {
         customElement.element = customElement.shadowRoot
 
         customElement.css = options.css || ''
-        // customElement.css += css // GLOBAL CSS. SHOULD IMPROVE!!
+            // customElement.css += css // GLOBAL CSS. SHOULD IMPROVE!!
         const styleTag = customElement.css ? `<style>${customElement.css}</style>` : ''
 
         if (customElement.shadowRoot) {
@@ -2372,6 +2928,814 @@ class BaseUtility {
     }
 }
 
+if (typeof window === 'object') {
+    window.BaseUtility = BaseUtility
+}
 if (typeof module === 'object') {
     module.exports = BaseUtility
 }
+},{}],4:[function(require,module,exports){
+/**
+ * Functions dependent on other libraries.
+ * TODO: Will become instance class. Dependencies will all be optional and checkable with typeguards.
+ * TODO: Should be added in constructor as key value map. Should be added to this.dependencies.
+ * TODO: Should be able to auto add dependencies with checker functions.
+ */
+class DependentFunctions {
+    /**
+     * Dependency: setUriParam
+     *
+     * @param {Array} languages // TODO: Check type
+     * @param {Object} domHelper
+     * @return {HTMLElement}
+     */
+    static getLanguageButtons(languages, domHelper) {
+        // TODO: Import from DomHelper class
+        var settings = {
+                tag: 'ul',
+                attributes: {
+                    class: 'language-buttons'
+                },
+                settings: undefined
+            }
+            // TODO: Import from DomHelper class
+        var childrenSettings = {
+            replacements: {
+                '$1': function(item /*, i */ ) {
+                    return item
+                },
+                '$2': function(item /*, i */ ) {
+                    var str = setUriParam(window.location.href, 'language', item) // TODO: fix like in other module.
+                    return str
+                }
+            },
+            items: languages,
+            format: {
+                tag: 'li',
+                children: [{
+                    tag: 'a',
+                    attributes: {
+                        href: '$2'
+                    },
+                    textContent: '$1'
+                }]
+            }
+        }
+        settings.children = domHelper.setChildrenSettings(settings, childrenSettings)
+
+        var ul = domHelper.createElement(settings)
+
+        return ul
+    }
+
+    /**
+     * Dependency: jQuery, Utility, ObjectHelper
+     *
+     * @param {String} url
+     * @param {Function} callback
+     */
+    static getVariablesFromFile(url, callback) {
+        var beforeKeys = Object.keys(window)
+        window.Utility.loadFile(url, function(data) {
+            window.Utility.loadScriptData(data, function() {
+                var added = window.Utility.getAddedVariableNames(window, beforeKeys)
+                var variables = window.ObjectHelper.filterObjectVariables(data, added)
+
+                callback(variables)
+            })
+        })
+    }
+
+    /**
+     * Dependency: https://github.com/derek-watson/jsUri
+     * Passes query value to function. Ex: http://domain.com?test=2 => testFunction(2);
+     *
+     * @param {String} uri
+     * @param {Object} actions
+     * @return {Object}
+     */
+    static uriActionHandler(uri, actions) {
+        if (!window.Uri) {
+            return false
+        }
+        var uriObj = new window.Uri(uri)
+
+        var val
+        var results = {}
+
+        for (var key in actions) {
+            val = uriObj.getQueryParamValue(key)
+            results[key] = actions[key](val)
+        }
+
+        return results
+    }
+
+    /**
+     * Dependency: https://github.com/derek-watson/jsUri
+     *
+     * @param {String} url
+     * @param {string} key
+     * @param {string} val
+     */
+    static setUriParam(url, key, val) {
+        if (!window.Uri) {
+            return false
+        }
+        var uriObj = new window.Uri(url)
+
+        return uriObj.deleteQueryParam(key).addQueryParam(key, val)
+    }
+
+    /**
+     * Dependency: https://github.com/jonsuh/hamburgers
+     * css dependency so no check.
+     *
+     * @param {HTMLElement} hamburger
+     */
+    static setupHamburger(hamburger) {
+        hamburger.addEventListener('click', function() {
+            // Toggle class "is-active"
+            hamburger.classList.toggle('is-active')
+                // Do something else, like open/close menu
+        })
+
+        /*
+            //jQuery
+            $hamburger = $(el);
+            $hamburger.on("click", function(e) {
+              $hamburger.toggleClass("is-active");
+              // Do something else, like open/close menu
+            });
+            */
+    }
+
+    /**
+     * Dependency: mustache
+     *
+     * @param {Object} data
+     */
+    static mustachifyCurrentPage(data) {
+        if (!window.Mustache) {
+            return false
+        }
+
+        var el = document.body
+        var html = el.innerHTML
+
+        /*
+            //Quick fix!! Forces all mustaches into no escape mustaches. Fails for loops.
+            var customTags = [ '{', '}' ];
+            //window.Mustache.parse(html, customTags);//Method 1
+            window.Mustache.tags = customTags;//Method 2
+            */
+        /**
+         * @param {string} text
+         * @return {string}
+         */
+        window.Mustache.escapeHtml = function(text) {
+                return text
+            }
+            /**
+             * @param {string} text
+             * @return {string}
+             */
+        window.Mustache.escape = function(text) {
+            return text
+        }
+
+        html = window.Mustache.render(html, data)
+
+        el.innerHTML = html
+
+        return true
+    }
+}
+
+module.exports = DependentFunctions
+},{}],5:[function(require,module,exports){
+const JsFunctions = {
+
+  // Base classes with no dependencies
+  BaseArrayHelper: require('./base-array-helper'),
+  BaseObjectHelper: require('./base-object-helper'),
+  BaseUtility: require('./base-utility'),
+  PureFunctions: require('./pure-functions'),
+
+  // Classes that may be dependent on base classes
+  Utility: require('./utility'),
+
+  // Classes that may be dependent on above
+  DependentFunctions: require('./dependent-functions'),
+  JQueryFunctions: require('./jquery-functions')
+}
+
+module.exports = JsFunctions
+
+},{"./base-array-helper":1,"./base-object-helper":2,"./base-utility":3,"./dependent-functions":4,"./jquery-functions":6,"./pure-functions":7,"./utility":8}],6:[function(require,module,exports){
+const Utility = require('./utility')
+
+/**
+ * List of JQuery based utility functions
+ */
+class JQueryFunctions {
+  /**
+     * Loads url via ajax
+     * Fails getting bad json due to auto parsing
+     *
+     * @param {String} url
+     * @param {Function} callback
+     * @param {Function} onError
+     */
+  static loadAjax (url, callback, onError) {
+    // Keep below just in case.
+    if (!window.$) {
+      callback(null)
+      return false
+    }
+
+    return window.$.ajax({
+      url: url,
+      /**
+             * @param {*} data
+             */
+      success: function (data) {
+        callback(data)
+      },
+      /**
+             *
+             * @param {XMLHttpRequest} xhr
+             * @param {string} status
+             * @param {string} errorStr
+             */
+      error: function (xhr, status, errorStr) {
+        callback(null)
+        if (onError) {
+          onError(xhr, status, errorStr)
+        }
+      },
+      dateType: 'text'
+    })
+  }
+
+  /**
+     * Loads JSON
+     *
+     * @param {String} url
+     * @param {Function} callback
+     */
+  static loadJson (url, callback) {
+    // jQuery dependent
+    if (!window.$) {
+      callback(null)
+      return false
+    }
+
+    return window.$.getJSON(url,
+      /**
+             * @param {object} object
+             */
+      function (object) {
+        callback(object)
+      })
+  }
+
+  /**
+     * Loads JSON that may have JS format instead.
+     * Does not seem to use jquery so should remove!!
+     *
+     * @deprecated
+     * @param {String} url
+     * @param {Function} callback
+     * @param {Function|undefined} onError
+     */
+  static loadFuzzyJson (url, callback, onError = undefined) {
+    Utility.loadFile(url,
+      /**
+             * @param {string} data
+             */
+      function (data) {
+        data = Utility.parseFuzzyJson(data)
+        callback(data)
+      }, onError)
+  }
+
+  /**
+     * Show element
+     *
+     * @param {HTMLElement} el
+     * @param {Object} options
+     */
+  static showElement (el, options = {}) {
+    return window.$(el).show(options)
+  }
+
+  /**
+     * Hide element
+     *
+     * @param {HTMLElement} el
+     * @param {Object} options
+     */
+  static hideElement (el, options = {}) {
+    return window.$(el).show(options)
+  }
+
+  /**
+     * Set display of element via boolean
+     *
+     * @param {HTMLElement} el
+     * @param {Boolean} bool
+     */
+  static setElementDisplay (el, bool) {
+    if (bool) {
+      return JQueryFunctions.showElement(el)
+    } else {
+      return JQueryFunctions.hideElement(el)
+    }
+  }
+}
+
+module.exports = JQueryFunctions
+
+},{"./utility":8}],7:[function(require,module,exports){
+/**
+ * Collection of pure functions.
+ * Pure functions have ZERO dependencies.
+ */
+class PureFunctions {
+  /**
+     * Simple function for observing(watching) changes on an object.
+     * This is for easy copy and pasting when needed so contains NO DEPENDENCIES.
+     * Logs changes and the stack.
+     * THE RETURNED PROXY OBJECT IS OBSERVED, SO MUST EDIT THE RETURNED VALUE.
+     * @param {Object} object
+     * @param {string[]} keys
+     * @return {Proxy}
+     */
+  static createObjectKeyObserver (object, keys = []) {
+    /**
+         * @type {ProxyHandler<*>}
+         */
+    const handler = {
+      set (target, key, value) {
+        if (keys.includes(key)) {
+          console.log(`Setting value ${key} as ${value}`)
+          try {
+            throw new Error('Error for catching stack')
+          } catch (error) {
+            console.log('Stack', error)
+          }
+          target[key] = value
+        }
+        return true
+      }
+    }
+    return new Proxy(object, handler)
+  }
+
+  /**
+     * Simple function for observing(watching) changes on an object.
+     * This is for easy copy and pasting when needed so contains NO DEPENDENCIES.
+     * Logs changes and the stack.
+     * @param {Object} object
+     * @param {string} key
+     * @return {function():void} Stops watching.
+     */
+  static observeObjectKeys (object, key) {
+    /*
+         * object.watch polyfill
+         *
+         * 2012-04-03
+         *
+         * By Eli Grey, http://eligrey.com
+         * Public Domain.
+         * NO WARRANTY EXPRESSED OR IMPLIED. USE AT YOUR OWN RISK.
+         */
+
+    // object.watch
+    if (!Object.prototype.watch) {
+      Object.defineProperty(Object.prototype, 'watch', {
+        enumerable: false,
+        configurable: true,
+        writable: false,
+        value: function (prop, handler) {
+          var currentVal = this[prop],
+            getter = function () {
+              return currentVal
+            },
+            setter = function (val) {
+              return currentVal = handler.call(this, prop, currentVal, val)
+            }
+          if (delete this[prop]) { // can't watch constants
+            Object.defineProperty(this, prop, {
+              get: getter,
+              set: setter,
+              enumerable: true,
+              configurable: true
+            })
+          }
+        }
+      })
+    }
+
+    // object.unwatch
+    if (!Object.prototype.unwatch) {
+      Object.defineProperty(Object.prototype, 'unwatch', {
+        enumerable: false,
+        configurable: true,
+        writable: false,
+        value: function (prop) {
+          var val = this[prop]
+          delete this[prop] // remove accessors
+          this[prop] = val
+        }
+      })
+    }
+    // Polyfill end.
+
+    object.watch(key, (key, oldVal, newVal) => {
+      console.log(`Setting key ${key} from ${oldVal} to ${newVal}`)
+      try {
+        throw new Error('Error for catching stack')
+      } catch (error) {
+        console.log('Stack', error)
+      }
+      return newVal
+    })
+
+    return () => {
+      object.unwatch(key)
+    }
+  }
+}
+
+module.exports = PureFunctions
+
+},{}],8:[function(require,module,exports){
+const BaseUtility = require('./base-utility')
+const BaseObjectHelper = require('./base-object-helper')
+// const BaseArrayHelper = require('./base-array-helper')
+
+/**
+ * @typedef {object} AjaxResponseOptions
+ * @property {function(boolean, XMLHttpRequest)} callback
+ */
+
+/**
+ * @typedef {*[]} ArgumentsObject
+ * @description Technically not any array. TODO: What is the correct type for this?
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments
+ */
+
+/*
+This file is for utility functions only.
+This file combines all base files functionality.
+Functions should have no state.
+No jQuery, etc.
+May include functions with some unsupported environments but should avoid latest js in builded form.
+*/
+class Utility extends BaseUtility {
+  /**
+     * Looks at data only(No object === object comparison. Instead checks each key and value)
+     *
+     * @param {*} a
+     * @param {*} b
+     * @return {Boolean}
+     */
+  static dataEquals (a, b) {
+    if (BaseObjectHelper.isCommonObject(a) && BaseObjectHelper.isCommonObject(b)) {
+      return Utility.objectDataEquals(a, b)
+    } else {
+      return BaseUtility.equals(a, b)
+    }
+  }
+
+  /**
+     * Checks if object data equals each other
+     *
+     * @param {*} a
+     * @param {*} b
+     * @param {*} looped For recursion
+     * @return {Boolean}
+     */
+  static objectDataEquals (a, b, looped = []) {
+    // Key check
+    if (!BaseUtility.arrayEquals(Object.keys(a), Object.keys(b))) {
+      return false
+    }
+
+    for (var key in a) {
+      // Ignore already looped
+      if (looped.indexOf(key) >= 0) {
+        continue
+      }
+
+      looped.push(key)
+
+      // Type check
+      if (typeof a[key] !== typeof b[key]) {
+        return false
+      }
+
+      // Value check
+      if (BaseObjectHelper.isCommonObject(a[key])) {
+        if (!Utility.objectDataEquals(a[key], b[key], looped)) {
+          return false
+        }
+      } else {
+        if (!BaseUtility.equals(a[key], b[key])) {
+          return false
+        }
+      }
+    }
+
+    // PASSED
+    return true
+  }
+
+  /**
+     * Array.prototype.slice is confusing because "to" is actually excluded.
+     *
+     * @param {*[]} arr
+     * @param {Number} from
+     * @param {Number} to
+     * @return {*[]}
+     */
+  static cleverSlice (arr, from, to) {
+    //
+    if (!BaseUtility.exists(from)) {
+      from = 0
+    }
+    if (!BaseUtility.exists(to)) {
+      return arr.slice(from)
+    } else {
+      return arr.slice(from, to + 1)
+    }
+  }
+
+  /**
+     * Gets Arguments as Array.
+     * Arguments from "arguments" are not a real array. Slice fixes this.
+     *
+     * @param {ArgumentsObject} args Arguments Object similar to array
+     * @param {Number} from
+     * @param {Number} to
+     * @return {*[]}
+     */
+  static getArguments (args, from, to) {
+    // In es6 this can be done with [...args].
+    args = Array.prototype.slice.call(args) // To array
+    return Utility.cleverSlice(args, from, to)
+  }
+
+  /**
+     * Combines array of objects into one.
+     *
+     * @param {object[]} args Array, but may be arguments list(why here?). Multiple objects.
+     * @return {Object}
+     */
+  static combineObjects (args) { // Multiple ob
+    args = [...args] // Possible Arguments list to arguments casting.
+
+    return Object.assign({}, ...args)
+  }
+
+  /**
+     * Checks if data in array.
+     * Checks data only, not reference equality.
+     *
+     * @param {*} data
+     * @param {*[]} arr
+     * @return {Boolean}
+     */
+  static dataInArray (data, arr) {
+    for (var i = 0; i < arr.length; i++) {
+      if (Utility.dataEquals(data, arr[i])) {
+        return true
+      }
+    }
+
+    // FAILED
+    return false
+  }
+
+  /**
+     * Copies variable regardless of type
+     *
+     * @param {*} variable
+     * @param {Boolean} keepReferences
+     * @return {*} copied variable
+     */
+  static copyVariable (variable, keepReferences = false) {
+    var copy = null
+    if (BaseObjectHelper.isObject(variable)) {
+      if (keepReferences) {
+        copy = Object.assign({}, variable)
+      } else {
+        copy = BaseObjectHelper.copyObject(variable)
+      }
+    } else if (Array.isArray(variable)) {
+      if (keepReferences) {
+        copy = variable.slice(0)
+      } else {
+        copy = BaseObjectHelper.copyObject(variable)
+      }
+    } else {
+      copy = variable
+    }
+
+    return copy
+  }
+
+  /**
+     * Creates multiple of single variable
+     *
+     * @param {*} variable
+     * @param {Number} count How many to make(integer)
+     * @param {Boolean} keepReferences
+     * @return {*[]} array of copies
+     */
+  static createMultiple (variable, count, keepReferences = false) {
+    var arr = []
+    for (var i = 0; i < count; i++) {
+      arr.push(Utility.copyVariable(variable, keepReferences))
+    }
+
+    return arr
+  }
+
+  /**
+     * Converts any variable to a readable string.
+     *
+     * @param {*} data
+     * @return {String}
+     */
+  static toReadableString (data) {
+    // Default
+    var str = ''
+
+    if (BaseObjectHelper.isObject(data)) {
+      str = BaseObjectHelper.objectToReadableString(data)
+    } else {
+      str = String(data)
+    }
+
+    return str
+  }
+
+  /**
+     * Exports data to browser UI as readable value.
+     *
+     * @param {*} data
+     */
+  static exportData (data) {
+    var str = Utility.toReadableString(data)
+    return window.prompt('', str)
+  }
+
+  /**
+     * Gets similarity of variable(0~1)
+     *
+     * @param {*} var1
+     * @param {*} var2
+     * @return {Number}
+     */
+  static getSimilarity (var1, var2) {
+    if (var1 === var2) {
+      return 1
+    } else if (typeof var1 === 'number' && typeof var2 === 'number') {
+      return Utility.getNumberSimilarity(var1, var2)
+    } else {
+      var1 = Utility.toReadableString(var1)
+      var2 = Utility.toReadableString(var2)
+    }
+
+    return Utility.getStringSimilarity(var1, var2)
+  }
+
+  /**
+     * Gets data set for sending to server.
+     * JQuery handles all this automatically so use JQuery ajax, post, get instead.
+     *
+     * @deprecated
+     * @param {*} data
+     * @return {Object}
+     */
+  static getDataSet (data) {
+    // SPEC: Makes sure format is ok for server.
+
+    if (!BaseObjectHelper.isObject(data)) {
+      return {}
+    }
+
+    return data
+  }
+
+  /**
+     * Executes ajax.
+     * See getDataSet for deprecation info.
+     *
+     * @deprecated
+     * @param {Object} dataSet dataSet is simple obj  with key/value pairs.
+     * @param {String} url
+     * @param {Object} options
+     */
+  static executeAjax (dataSet, url, options) {
+    // Default
+    //
+
+    // Options
+    if (BaseObjectHelper.isObject(options)) {
+      //
+    }
+
+    // URL check
+    if (!url) {
+      return Utility.handleAjaxResponse(new window.XMLHttpRequest(), options)
+    }
+
+    // Header settings
+    var contentEncoding = 'gzip'
+    var contentType = 'application/x-www-form-urlencoded; charset=UTF-8'
+
+    // Data
+    var params = Utility.getAjaxParams(dataSet)
+
+    // Connection
+    var xhr = new window.XMLHttpRequest()
+    xhr.open('POST', url, true) // Always async
+    xhr.setRequestHeader('Content-Encoding', contentEncoding)
+    xhr.setRequestHeader('Content-Type', contentType) // REQUIRED FOR PARAMS FORMAT
+    xhr.onload = function () {
+      Utility.handleAjaxResponse(xhr, options)
+    }
+    xhr.onerror = function () {
+      Utility.handleAjaxResponse(xhr, options)
+    }
+    return xhr.send(params)
+  }
+
+  /**
+     * Creates AJAX parameters from object of key value pairs.
+     * Just need to attach to end of GET URL(example@domain.com?[ADD HERE])
+     *
+     * @param {Object} obj
+     * @return {String}
+     */
+  static getAjaxParams (obj) {
+    var params = ''
+    var i = 0
+
+    for (var key in obj) {
+      if (i > 0) { params += '&' }
+      params += key
+      params += '='
+      params += window.encodeURIComponent(obj[key])
+
+      // Inc
+      i++
+    }
+
+    return params
+  }
+
+  /**
+     * Handles response from AJAX.
+     * See getDataSet for deprecation info.
+     *
+     * @deprecated
+     * @param {XMLHttpRequest} xhr
+     * @param {AjaxResponseOptions} options
+     * @return {*}
+     */
+  static handleAjaxResponse (xhr, options) {
+    // Not finished
+    if (xhr && xhr.readyState !== xhr.DONE) {
+      return false
+    }
+
+    // Default
+    var callback = null
+
+    // Options
+    if (BaseObjectHelper.isObject(options)) {
+      // Callback
+      if (options.callback !== undefined) {
+        callback = options.callback
+      }
+    }
+
+    // Handle response
+    var response = false
+    if (xhr) {
+      response = xhr.response
+    }
+
+    // Callback
+    return (callback !== null) ? Utility.handleCallback(callback, [response, xhr]) : null
+  }
+}
+
+module.exports = Utility
+
+},{"./base-object-helper":2,"./base-utility":3}]},{},[5]);

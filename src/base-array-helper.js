@@ -1,4 +1,4 @@
-class BaseArrayHelper {
+class BaseArrayHelper { // TODO: https://stackoverflow.com/questions/59083632/how-to-fix-definition-for-rule-typescript-eslint-no-use-before-declare-was-n
   /**
      * Searches object array for value.
      *
@@ -7,10 +7,16 @@ class BaseArrayHelper {
      * @param {*} val
      * @return {object[]} array of objects with match
      */
-  static searchObjectArray (arr, key, val) {
-    var found = []
-    var obj
-    for (var i = 0; i < arr.length; i++) {
+  static searchObjectArray(arr, key, val) {
+    /**
+     * @type {Object<string, *>[]}
+     */
+    const found = []
+    /**
+     * @type {Object<string, *>}
+     */
+    let obj
+    for (let i = 0; i < arr.length; i++) {
       obj = arr[i]
 
       if (obj[key] === val) {
@@ -29,7 +35,7 @@ class BaseArrayHelper {
      * @param {String} defaultVal
      * @return {Object<string|number, *>}
      */
-  static singleDimensionArrayToObject (arr, defaultVal = '') {
+  static singleDimensionArrayToObject(arr, defaultVal = '') {
     /**
          * @type {Object<string|number, *>}
          */
@@ -54,7 +60,7 @@ class BaseArrayHelper {
      * @param {Array<string|number>} keys
      * @return {Object<string, *>[]}
      */
-  static arrayListToObjectList (arr, keys) {
+  static arrayListToObjectList(arr, keys) {
     return arr.map(function (val) {
       /**
              * @type {Object<string, *>}
@@ -73,7 +79,7 @@ class BaseArrayHelper {
      * @param {string[]} arr
      * @return {String}
      */
-  static arrayToCamelCase (arr) {
+  static arrayToCamelCase(arr) {
     var str = ''
     var tempStr
 
@@ -97,7 +103,7 @@ class BaseArrayHelper {
      * @param {String} format
      * @return {String}
      */
-  static buildDelimiterString (arr, format) {
+  static buildDelimiterString(arr, format) {
     var cHandle = null
 
     if (format === 'camelCase') {
@@ -122,7 +128,7 @@ class BaseArrayHelper {
      * @param {*[]} arr
      * @return {*[]}
      */
-  static uniqueArray (arr) {
+  static uniqueArray(arr) {
     return arr.filter((value, index, array) => {
       return array.indexOf(value) === index
     })

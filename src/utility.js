@@ -4,7 +4,7 @@ const BaseObjectHelper = require('./base-object-helper')
 
 /**
  * @typedef {object} AjaxResponseOptions
- * @property {function(boolean, XMLHttpRequest)} callback
+ * @property {function(boolean, XMLHttpRequest):void} callback
  */
 
 /**
@@ -28,7 +28,7 @@ class Utility extends BaseUtility {
      * @param {*} b
      * @return {Boolean}
      */
-  static dataEquals (a, b) {
+  static dataEquals(a, b) {
     if (BaseObjectHelper.isCommonObject(a) && BaseObjectHelper.isCommonObject(b)) {
       return Utility.objectDataEquals(a, b)
     } else {
@@ -44,7 +44,7 @@ class Utility extends BaseUtility {
      * @param {*} looped For recursion
      * @return {Boolean}
      */
-  static objectDataEquals (a, b, looped = []) {
+  static objectDataEquals(a, b, looped = []) {
     // Key check
     if (!BaseUtility.arrayEquals(Object.keys(a), Object.keys(b))) {
       return false
@@ -87,7 +87,7 @@ class Utility extends BaseUtility {
      * @param {Number} to
      * @return {*[]}
      */
-  static cleverSlice (arr, from, to) {
+  static cleverSlice(arr, from, to) {
     //
     if (!BaseUtility.exists(from)) {
       from = 0
@@ -108,7 +108,7 @@ class Utility extends BaseUtility {
      * @param {Number} to
      * @return {*[]}
      */
-  static getArguments (args, from, to) {
+  static getArguments(args, from, to) {
     // In es6 this can be done with [...args].
     args = Array.prototype.slice.call(args) // To array
     return Utility.cleverSlice(args, from, to)
@@ -120,7 +120,7 @@ class Utility extends BaseUtility {
      * @param {object[]} args Array, but may be arguments list(why here?). Multiple objects.
      * @return {Object}
      */
-  static combineObjects (args) { // Multiple ob
+  static combineObjects(args) { // Multiple ob
     args = [...args] // Possible Arguments list to arguments casting.
 
     return Object.assign({}, ...args)
@@ -134,7 +134,7 @@ class Utility extends BaseUtility {
      * @param {*[]} arr
      * @return {Boolean}
      */
-  static dataInArray (data, arr) {
+  static dataInArray(data, arr) {
     for (var i = 0; i < arr.length; i++) {
       if (Utility.dataEquals(data, arr[i])) {
         return true
@@ -152,7 +152,7 @@ class Utility extends BaseUtility {
      * @param {Boolean} keepReferences
      * @return {*} copied variable
      */
-  static copyVariable (variable, keepReferences = false) {
+  static copyVariable(variable, keepReferences = false) {
     var copy = null
     if (BaseObjectHelper.isObject(variable)) {
       if (keepReferences) {
@@ -181,7 +181,7 @@ class Utility extends BaseUtility {
      * @param {Boolean} keepReferences
      * @return {*[]} array of copies
      */
-  static createMultiple (variable, count, keepReferences = false) {
+  static createMultiple(variable, count, keepReferences = false) {
     var arr = []
     for (var i = 0; i < count; i++) {
       arr.push(Utility.copyVariable(variable, keepReferences))
@@ -196,7 +196,7 @@ class Utility extends BaseUtility {
      * @param {*} data
      * @return {String}
      */
-  static toReadableString (data) {
+  static toReadableString(data) {
     // Default
     var str = ''
 
@@ -214,7 +214,7 @@ class Utility extends BaseUtility {
      *
      * @param {*} data
      */
-  static exportData (data) {
+  static exportData(data) {
     var str = Utility.toReadableString(data)
     return window.prompt('', str)
   }
@@ -226,7 +226,7 @@ class Utility extends BaseUtility {
      * @param {*} var2
      * @return {Number}
      */
-  static getSimilarity (var1, var2) {
+  static getSimilarity(var1, var2) {
     if (var1 === var2) {
       return 1
     } else if (typeof var1 === 'number' && typeof var2 === 'number') {
@@ -247,7 +247,7 @@ class Utility extends BaseUtility {
      * @param {*} data
      * @return {Object}
      */
-  static getDataSet (data) {
+  static getDataSet(data) {
     // SPEC: Makes sure format is ok for server.
 
     if (!BaseObjectHelper.isObject(data)) {
@@ -264,9 +264,9 @@ class Utility extends BaseUtility {
      * @deprecated
      * @param {Object} dataSet dataSet is simple obj  with key/value pairs.
      * @param {String} url
-     * @param {Object} options
+     * @param {AjaxResponseOptions} options
      */
-  static executeAjax (dataSet, url, options) {
+  static executeAjax(dataSet, url, options) {
     // Default
     //
 
@@ -305,10 +305,10 @@ class Utility extends BaseUtility {
      * Creates AJAX parameters from object of key value pairs.
      * Just need to attach to end of GET URL(example@domain.com?[ADD HERE])
      *
-     * @param {Object} obj
+     * @param {import('./base-object-helper').Dictionary} obj
      * @return {String}
      */
-  static getAjaxParams (obj) {
+  static getAjaxParams(obj) {
     var params = ''
     var i = 0
 
@@ -334,7 +334,7 @@ class Utility extends BaseUtility {
      * @param {AjaxResponseOptions} options
      * @return {*}
      */
-  static handleAjaxResponse (xhr, options) {
+  static handleAjaxResponse(xhr, options) {
     // Not finished
     if (xhr && xhr.readyState !== xhr.DONE) {
       return false
