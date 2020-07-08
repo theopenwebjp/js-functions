@@ -1190,6 +1190,4 @@ class BaseUtility {
         return object;
     }
 }
-if (typeof module === 'object') {
-    module.exports = BaseUtility;
-}
+module.exports = BaseUtility;

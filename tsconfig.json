@@ -18,7 +18,8 @@
     "noEmit": false,
     "declaration": true,
     "declarationDir": "./declarations",
-    "declarationMap": true
+    "declarationMap": true,
+    "extendedDiagnostics": true
   },
   "include": [
     "./src/*"
