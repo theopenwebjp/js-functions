@@ -804,7 +804,7 @@ class BaseUtility {
     /**
      * Loads file data from input event.
      *
-     * @param {InputEvent|DragEvent} event
+     * @param {DragEvent|Event} event
      * @param {Function} callback
      * @param {{method: FILE_READER_METHOD_NAMES}} options
      * @return {FileReader}
@@ -817,15 +817,7 @@ class BaseUtility {
          * @type {File|null}
          */
         var file = null
-        if (event instanceof InputEvent) {
-            if (!(event.target instanceof HTMLInputElement)) {
-                return noFilesError()
-            }
-            if (!event.target.files || event.target.files.length === 0) {
-                return noFilesError()
-            }
-            file = event.target.files[0]
-        } else {
+        if (event instanceof DragEvent) {
             if (!(event.dataTransfer)) {
                 return noFilesError()
             }
@@ -834,6 +826,14 @@ class BaseUtility {
                 return noFilesError()
             }
             file = item
+        } else {
+            if (!(event.target instanceof HTMLInputElement)) {
+                return noFilesError()
+            }
+            if (!event.target.files || event.target.files.length === 0) {
+                return noFilesError()
+            }
+            file = event.target.files[0]
         }
         if (!file) {
             return noFilesError()
