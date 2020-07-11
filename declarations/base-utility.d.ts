@@ -30,7 +30,7 @@ declare class BaseUtility {
     static getCurrentDate(): Date;
     static getFormattedString(str: string, delimiter: string, lenArr: number[]): string;
     static getCurrentLocation(callback: Function): void;
-    static loadFileInput(event: InputEvent | DragEvent, callback: Function, options: {
+    static loadFileInput(event: DragEvent | Event, callback: Function, options: {
         method: FILE_READER_METHOD_NAMES;
     }): FileReader;
     static convertTabbedDataToArray(data: string, colCount: number): Array<never[]> | Array<string[]>;
