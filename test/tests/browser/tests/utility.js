@@ -1,12 +1,14 @@
-var expect = require('chai').expect
-var chai = require('chai')
+// const chai = require('chai')
+import chai from 'chai'
+// const Utility = require('../../../../src/utility')
+import * as Utility from '../../../../src/utility.js'
+
+const { expect } = chai
 
 // var fs = require("fs");
 // eval( fs.readFileSync('./../utility.js', 'utf8') );
 
-var val
-
-const Utility = require('../../../../src/utility')
+let val
 
 describe('utility.js', function () {
   describe('dataEquals', function () {
@@ -45,8 +47,7 @@ describe('utility.js', function () {
       }
     }
     const nestedObj2 = JSON.parse(JSON.stringify(nestedObj1))
-    const nestedObj3 = JSON.parse(JSON.stringify(nestedObj1))
-    nestedObj3.d.a = [1, 2, 1]// Only here different
+    const nestedObj3 = JSON.parse(JSON.stringify(nestedObj1)); nestedObj3.d.a = [1, 2, 1]// Only here different
     it('objects equal', function () {
       val = Utility.objectDataEquals(obj1, obj2); expect(val).to.equal(true)
     })
@@ -71,7 +72,8 @@ describe('utility.js', function () {
 
   describe('getArguments', function () {
     it('Returns specified arguments as an array', function () {
-      var f = function (a, b, c, d) {
+      // const f = function (a, b, c, d) {
+      const f = function () {
         return Utility.getArguments(arguments, 1, 2)
       }
       val = f(1, 2, 3, 4)
@@ -106,7 +108,7 @@ describe('utility.js', function () {
   })
 
   describe('createMultiple', function () {
-    var obj = {
+    const obj = {
       a: 1,
       b: [1, 2, 3],
       c: 'a'
@@ -117,7 +119,7 @@ describe('utility.js', function () {
 
   describe('toReadableString', function () {
     it('Object to string returns a string', function () {
-      var obj = { a: 1 }
+      const obj = { a: 1 }
       val = Utility.toReadableString(obj)
       chai.expect(val).to.be.a('string')
     })
@@ -130,7 +132,7 @@ describe('utility.js', function () {
 
   describe.skip('exportData', function () {
     it('exports', function () {
-      chai.expect(true).to.equal(false)// ??Must stub window.prompt first.
+      chai.expect(true).to.equal(false)// TODO: Must stub window.prompt first.
     })
   })
 
@@ -146,32 +148,32 @@ describe('utility.js', function () {
 
     it('Other uses string similarity', function () {
       val = Utility.getSimilarity('aa', 'ccc')
-      var h = Utility.toReadableString
+      const h = Utility.toReadableString
       expect(val).to.equal(Utility.getStringSimilarity(h('aa'), h('ccc')))
     })
   })
 
   describe.skip('getDataSet', function () {
     it('Gets data set', function () {
-      chai.expect(true).to.equal(false)// ??Check spec first.
+      chai.expect(true).to.equal(false)// TODO: Check spec first.
     })
   })
 
   describe.skip('executeAjax', function () {
     it('Executes AJAX properly', function () {
-      chai.expect(true).to.equal(false)// ??Must stub AJAX first.
+      chai.expect(true).to.equal(false)// TODO: Must stub AJAX first.
     })
   })
 
   describe.skip('getAjaxParams', function () {
     it('Gets AJAX parameters', function () {
-      chai.expect(true).to.equal(false)// ??Must stub window.encodeURIComponent first.
+      chai.expect(true).to.equal(false)// TODO: Must stub window.encodeURIComponent first.
     })
   })
 
   describe.skip('handleAjaxResponse', function () {
     it('Handles AJAX response', function () {
-      chai.expect(true).to.equal(false)// ??Must stub AJAX first.
+      chai.expect(true).to.equal(false)// TODO: Must stub AJAX first.
     })
   })
 })

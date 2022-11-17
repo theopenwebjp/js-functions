@@ -4,7 +4,12 @@ const reporter = require('eslint-html-reporter')
 const path = require('path')
 const fs = require('fs')
 
-const NodeFunctions = require('node-functions')
+// If programmatic handling of mocha of desired, check below:
+// const Mocha = require('mocha');
+// const mocha = new Mocha({  })
+// mocha.addFile('...')
+// mocha.run().on(...)
+// https://stackoverflow.com/a/29802434/1764521
 
 gulp.task('eslint', function () {
   gulp.src(['./src/*.js'])
@@ -15,8 +20,4 @@ gulp.task('eslint', function () {
       fs.writeFileSync(path.join(__dirname, 'report-results.html'), results)
         })
     )
-})
-
-gulp.task('browserify-tests', function () {
-  NodeFunctions.browserifyFolder(path.resolve('./test/tests/browser/tests'), path.resolve('./test/tests/browser/dist/bundle.test.js'))
 })

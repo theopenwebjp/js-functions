@@ -1,5 +1,7 @@
-const BaseArrayHelper = require('../../../../src/base-array-helper');
-const chai = require('chai');
+// const BaseArrayHelper = require('../../../../src/base-array-helper');
+import * as BaseArrayHelper from '../../../../src/base-array-helper.js'
+// const chai = require('chai');
+import chai from 'chai';
 
 describe('BaseArrayHelper', function(){
     describe('searchObjectArray', ()=>{
@@ -75,7 +77,7 @@ describe('BaseArrayHelper', function(){
         chai.expect(h(arr, '_')).to.equal('delimiter_string');
     });
 
-    describe('uniqueArray', (arr)=>{
+    describe('uniqueArray', ()=>{
         const h = BaseArrayHelper.uniqueArray;
         chai.expect(h([1,1,2,2,1,2])).to.deep.equal([1,2]);
     });

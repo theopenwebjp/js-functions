@@ -22,10 +22,14 @@ IT SHOULD NOT INCLUDE ANY DEPENDENDENCIES OTHER THAN devDependencies.
 
 Some important functions are being tested.
 More tests may be added over time.
-Tests can be performed in the "tests" folder with "npm run test" after "npm install". Tests may include auto-reporting. To perform only tests use "npm run test-only".
-To install dev dependencies only execute "npm install --only=dev".
+Tests can be performed in the "tests" folder with `npm run test` after `npm install`. Tests may include auto-reporting.
 
 Tests may be incomplete. Please run to check the status.
+
+- Test treeshaking: `npm run test-treeshaking`.
+  - Can test treeshaking code is working before build via: `npx http-server ./` and going to [http://localhost:8080/test/tests/tree-shaking](http://localhost:8080/test/tests/tree-shaking).
+  - Can specify typeof treeshaking test with: `npm run test-treeshaking [TYPE]`, where [TYPE] is any from [here](test\tests\tree-shaking\README.md#keys).
+- Playground: `npx http-server ./` and go to [http://localhost:8080/playground](http://localhost:8080/playground)
 
 ## Coverage
 
@@ -39,12 +43,14 @@ Other files have dependencies stated in name of file or in code.
 
 ## Documentation
 
+To run all documentation scripts, execute: `npm run docs`.
+
 - `npm run esdoc` will generate documentation.
 - [esdoc config](https://esdoc.org/manual/config.html#full-config)
 
 ## Linting
 
-"npm run eslint" will generate linting reports.
+`npm run eslint` will generate linting reports.
 
 ## Installation
 
@@ -57,12 +63,3 @@ No special setup required. Just add js code into your own project.
 ## Contributors
 
 Damien Golding
-
-## Supporters
-
-## To Do
-
-- mocha-phantomjs resulting in parse error even though works directly in browser(Probably due to old phantomjs version not supporting es2015).
-- Tried following but got "An error occurred trying to launch phantomjs at ..."
-- -p ./node_modules/phantomjs/bin/phantomjs
-- -p ./node_modules/.bin/phantomjs

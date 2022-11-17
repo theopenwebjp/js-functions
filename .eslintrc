@@ -1,7 +1,8 @@
 {
     "extends": "eslint:recommended",
     "parserOptions": {
-        "ecmaVersion": 6
+        "ecmaVersion": 6,
+        "sourceType": "module"
     },
     "env": {
         "browser": true,
@@ -11,10 +12,18 @@
     },
     "rules": {
         "no-console": "off",
-        "no-redclare": "warn",
-        "no-unused": "warn",
+        "no-redeclare": "warn",
+        "no-unused-vars": "warn",
+        "no-var": "error",
         "no-use-before-define": ["off", {
             "variables": false
-        }]
-    }
+        }],
+        "no-loss-of-precision": "off",
+        "no-nonoctal-decimal-escape": "off",
+        "no-unsafe-optional-chaining": "off",
+        "no-useless-backreference": "off"
+    },
+    "ignorePatterns": [
+        "**/*.html"
+    ]
 }

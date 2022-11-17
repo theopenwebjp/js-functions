@@ -1,14 +1,17 @@
-const BaseObjectHelper = require('../../../../src/base-object-helper')
+// const BaseObjectHelper = require('../../../../src/base-object-helper')
+import * as BaseObjectHelper from '../../../../src/base-object-helper.js'
+// const chai = require('chai')
+import chai from 'chai'
+// const jsdom = require('jsdom')
+import jsdom from 'jsdom'
 
-var chai = require('chai')
-var expect = require('chai').expect
+const { expect } = chai
 
-const jsdom = require('jsdom')
 const { JSDOM } = jsdom
-var jsDom = new JSDOM('')
-var document = jsDom.window.document
+const jsDom = new JSDOM('')
+const document = jsDom.window.document
 
-var val
+let val
 
 describe('base-object-helper.js', function () {
   describe('copyObject', function () {
@@ -124,7 +127,7 @@ describe('base-object-helper.js', function () {
   })
 
   describe('objectToObjectInfoArray', function () {
-    it('Has 3 items of object type', () => {
+    it('Has 2 items of object type', () => {
       const obj = {
         a: 1,
         b: [
@@ -135,7 +138,7 @@ describe('base-object-helper.js', function () {
       }
       const arr = BaseObjectHelper.objectToObjectInfoArray(obj)
       chai.expect(arr).to.be.an('array')
-      chai.expect(arr).to.have.lengthOf(3)
+      chai.expect(arr).to.have.lengthOf(2)
       arr.forEach(item => {
         chai.expect(item).to.be.an('object')
       })
@@ -144,7 +147,7 @@ describe('base-object-helper.js', function () {
 
   describe('ObjectInfo', function () {
     it('has correct format', () => {
-      const obj = BaseObjectHelper.ObjectInfo()
+      const obj = BaseObjectHelper.objectInfo()
       chai.expect(Object.keys(obj)).to.deep.equal([
         'depth', 'key', 'value'
       ])
@@ -277,9 +280,11 @@ describe('base-object-helper.js', function () {
   describe('watchObjectProperty', function () {
     it('Does not throw error', () => {
       try {
-        BaseObjectHelper.watchObjectProperty({ a: 1 }, 'a')
+        const obj = BaseObjectHelper.watchObjectProperty({ a: 1 }, 'a')
+        obj.stop()
         chai.assert(true)
       } catch (err) {
+        console.debug('watchObjectProperty', err)
         chai.assert(false)
       }
     })

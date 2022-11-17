@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset='utf-8'>
+  <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+  <title>Tree Shaking Code OK Test File</title>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+  <script src="./dist/bundle.js"></script>
+  <script type="module">
+    // Each SHOULD export a default module.
+    // import * as Bundled from './dist/bundle.js'
+    import Bundled from './dist/bundle.js'
+    console.log({ Bundled })
+  </script>
+  <script type="module">
+    import Dependent from './dependent.js'
+    import File from './file.js'
+    import NonDependent from './non-dependent.js'
+
+    window.Globals = {
+      Dependent, File, NonDependent
+    }
+    console.log('window.Globals', window.Globals)
+  </script>
+</head>
+<body>
+  <h1>Tree Shaking Code OK Test File</h1>
+  <p>
+    This file is JUST for testing code before tree shaking.<br>
+    Check the console to see exported globals.
+  </p>
+</body>
+</html>
