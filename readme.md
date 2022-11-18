@@ -18,6 +18,12 @@ utility: Dependent on window/DOM browser environment.
 THIS LIBRARY IS MEANT AS A SMALL LIBRARY FOR UTILITY FUNCTIONS.
 IT SHOULD NOT INCLUDE ANY DEPENDENDENCIES OTHER THAN devDependencies.
 
+## Installation
+
+```bash
+npm install @theopenweb/js-functions
+```
+
 ## Testing
 
 Some important functions are being tested.
@@ -51,14 +57,6 @@ To run all documentation scripts, execute: `npm run docs`.
 ## Linting
 
 `npm run eslint` will generate linting reports.
-
-## Installation
-
-No installation required.
-
-## Setup
-
-No special setup required. Just add js code into your own project.
 
 ## Contributors
 

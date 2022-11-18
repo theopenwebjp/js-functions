@@ -1,5 +1,5 @@
 {
-    "name": "js-functions",
+    "name": "@theopenweb/js-functions",
     "type": "module",
     "version": "1.0.0",
     "description": "Set of general/common utility functions that can be used in JavaScript.",
@@ -41,7 +41,20 @@
         "webpack": "^5.75.0",
         "webpack-cli": "^4.10.0"
     },
-    "author": "Damien Golding",
+    "keywords": ["functions", "utility", "es6", "library"],
+    "author": "The Open Web <noreply@theopenweb.jp> (https://theopenweb.jp)",
+    "contributors": [
+      "Damien Golding <noreply@damiengolding.com> (https://damiengolding.com)"
+    ],
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/theopenwebjp/js-functions.git"
+    },
+    "homepage": "https://theopenweb.info",
+    "bugs": {
+      "url": "https://github.com/theopenwebjp/js-functions/issues"
+    },
+    "private": false,
     "license": "MIT",
     "types": "./declarations/index.d.ts",
     "sideEffects": false
