@@ -51,8 +51,7 @@ Other files have dependencies stated in name of file or in code.
 
 To run all documentation scripts, execute: `npm run docs`.
 
-- `npm run esdoc` will generate documentation.
-- [esdoc config](https://esdoc.org/manual/config.html#full-config)
+Generated documentation is accessible from: [./api_docs/modules.md](./api_docs/modules.md)
 
 ## Linting
 

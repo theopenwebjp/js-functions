@@ -1,19 +1,21 @@
 {
     "name": "@theopenweb/js-functions",
     "type": "module",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Set of general/common utility functions that can be used in JavaScript.",
     "main": "./src/index.js",
     "directories": {
         "test": "tests"
     },
+    "files": [
+        "declarations", "dist", "src", "package.json", "LICENSE", "readme.md"
+    ],
     "scripts": {
         "test": "npm run test-treeshaking && npm run test-nyc",
-        "docs": "npm run esdoc && npm run eslint",
+        "docs": "npm run api-docs && npm run eslint",
         "test-treeshaking": "cd ./test/tests/tree-shaking && webpack --config ./webpack.config.cjs",
-        "_test-browser": "gulp --gulpfile ./gulpfile.cjs && mocha-phantomjs ./test/tests/browser/mocha-html/index.html -p ./node_modules/.bin/phantomjs",
         "test-nyc": "nyc --reporter=html mocha ./test/tests/browser/tests/*.js --require esm -r jsdom-global/register",
-        "esdoc": "./node_modules/.bin/esdoc -c ./.esdoc.json",
+        "api-docs": "typedoc --plugin typedoc-plugin-markdown --out api_docs ./src/index.js",
         "eslint": "gulp --gulpfile ./gulpfile.cjs eslint",
         "pre-commit": "npm run test && npm run eslint"
     },
@@ -38,21 +40,28 @@
         "mocha-phantomjs": "^4.1.0",
         "nyc": "^15.1.0",
         "phantomjs": "^2.1.7",
+        "typedoc": "^0.23.25",
+        "typedoc-plugin-markdown": "^3.14.0",
         "webpack": "^5.75.0",
         "webpack-cli": "^4.10.0"
     },
-    "keywords": ["functions", "utility", "es6", "library"],
+    "keywords": [
+        "functions",
+        "utility",
+        "es6",
+        "library"
+    ],
     "author": "The Open Web <noreply@theopenweb.jp> (https://theopenweb.jp)",
     "contributors": [
-      "Damien Golding <noreply@damiengolding.com> (https://damiengolding.com)"
+        "Damien Golding <noreply@damiengolding.com> (https://damiengolding.com)"
     ],
     "repository": {
-      "type": "git",
-      "url": "https://github.com/theopenwebjp/js-functions.git"
+        "type": "git",
+        "url": "https://github.com/theopenwebjp/js-functions.git"
     },
     "homepage": "https://theopenweb.info",
     "bugs": {
-      "url": "https://github.com/theopenwebjp/js-functions/issues"
+        "url": "https://github.com/theopenwebjp/js-functions/issues"
     },
     "private": false,
     "license": "MIT",

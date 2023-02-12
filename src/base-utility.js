@@ -535,6 +535,25 @@ export function downloadBlob(blob, name) {
 }
 
 /**
+* @example downloadBlobURL(document.querySelector('video').getAttribute('src'))
+* @param {string} blobURL
+*/
+export function downloadBlobURL(blobURL, name='data') {
+    const link = document.createElement('a');
+    link.href = blobURL;
+    link.download = name;
+  
+    // this is necessary as link.click() does not work on the latest firefox
+    link.dispatchEvent(
+      new MouseEvent('click', { 
+        bubbles: true, 
+        cancelable: true, 
+        view: window 
+      })
+    );
+  }
+  
+/**
  * Downloads link
  * CAUTION. Not working for cross domain urls.
  * CAUTION. Max 10 downloads at once(occurred in Chrome).
