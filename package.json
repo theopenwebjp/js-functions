@@ -2,7 +2,7 @@
     "name": "@theopenweb/js-functions",
     "type": "module",
     "version": "1.1.0",
-    "description": "Set of general/common utility functions that can be used in JavaScript.",
+    "description": "Set of general/common utility functions that can be used in JavaScript. Uses es6 exports.",
     "main": "./src/index.js",
     "directories": {
         "test": "tests"
