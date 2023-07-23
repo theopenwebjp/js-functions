@@ -1030,7 +1030,7 @@ export function getLoadTemplateHandle(src, parent) {
 
 /**
  * Loads array of url data with custom handle for handling urls
- * Removed: @param {Boolean} optionsAbstract ordered default false because order not usually important.
+ * Removed: param {Boolean} optionsAbstract ordered default false because order not usually important.
  * @param {string[]} arr array of link href urls.
  * @param {function(string, HTMLElement):*} handle
  * @param {Partial<MultipleUrlLoadingOptions>} options

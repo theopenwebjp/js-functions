@@ -3,6 +3,7 @@ import * as BaseObjectHelper from './base-object-helper.js'
 import * as BaseUtility from './base-utility.js'
 import * as PureFunctions from './pure-functions.js'
 import * as Utility from './utility.js'
+import * as Services from './services.js'
 
 export {
 
@@ -13,5 +14,6 @@ export {
   PureFunctions,
 
   // Classes that may be dependent on base classes
-  Utility
+  Utility,
+  Services,
 }
