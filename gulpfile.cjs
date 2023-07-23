@@ -1,4 +1,9 @@
-const eslint = require('gulp-eslint')
+// const eslint = require('gulp-eslint')
+// https://github.com/origin-1/gulp-eslint-new/issues/8
+/**
+ * @type {import('gulp-eslint-new')['default']}
+ */
+const eslint = require('gulp-eslint-new')
 const gulp = require('gulp')
 const reporter = require('eslint-html-reporter')
 const path = require('path')
