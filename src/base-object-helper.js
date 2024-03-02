@@ -1,37 +1,10 @@
 /**
- * @typedef {Object<string, *>} Dictionary
- */
-
-/**
- * @typedef {object} ObjectInfo
- * @property {number} depth
- * @property {string} key
- * @property {*} value
- */
-
-/**
- * @typedef {object} KeyValue
- * @property {null|string} key
- * @property {null|*} value
- */
-
-/**
- * @typedef {object} GetterSetter
- * @property {function():*} get
- * @property {function(*):void} set
- */
-
-/**
- * @typedef {GetterSetter} WatchOptions
- */
-
-/**
- * @typedef {object} WatchObject
- * @property {object} obj
- * @property {string} key
- * @property {*} initialValue
- * @property {WatchOptions} options
- * @property {function():void} stop
+ * @typedef {import('./types/ts').Dictionary} Dictionary
+ * @typedef {import('./types/ts').ObjectInfo} ObjectInfo
+ * @typedef {import('./types/ts').KeyValue} KeyValue
+ * @typedef {import('./types/ts').GetterSetter} GetterSetter
+ * @typedef {import('./types/ts').WatchOptions} WatchOptions
+ * @typedef {import('./types/ts').WatchObject} WatchObject
  */
 
 /**
@@ -145,17 +118,13 @@ export function getObjectKeys(obj) {
 }
 
 /**
- * @typedef {Array<*>|Dictionary} CommonObject
- */
-
-/**
    * Expands and inserts data of common object into common object.
    * Common object: Array or normal object
    *
-   * @param {CommonObject} obj
-   * @param {CommonObject} parentObj
+   * @param {import('./types/ts').CommonObject} obj
+   * @param {import('./types/ts').CommonObject} parentObj
    * @param {Number} insertIndex
-   * @return {CommonObject}
+   * @return {import('./types/ts').CommonObject}
    */
 export function expandCommonObjectIntoObject(obj, parentObj, insertIndex = 0) {
   /**
@@ -365,16 +334,7 @@ export function renameObjectKey(obj, oldKey, newKey) {
    */
 export function getKeyChanges(oldObj, newObj) {
   /**
-   * Also array allowed. Anything with keys ok.
-   * @typedef {object} Changes
-   * @property {Dictionary} added
-   * @property {Dictionary} updated
-   * @property {Dictionary} old
-   * @property {Dictionary} deleted
-   */
-
-  /**
-   * @type {Changes}
+   * @type {import('./types/ts').Changes}
    */
   const changes = {
     added: {}, // New value

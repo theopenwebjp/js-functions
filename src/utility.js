@@ -6,17 +6,6 @@ import {
 
 export * from './base-utility.js'
 
-/**
- * @typedef {object} AjaxResponseOptions
- * @property {function(boolean, XMLHttpRequest):void} callback
- */
-
-/**
- * @typedef {*[]} ArgumentsObject
- * @description Technically not any array. TODO: What is the correct type for this?
- * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments
- */
-
 /*
 This file is for utility functions only.
 This file combines all base files functionality.
@@ -109,7 +98,7 @@ export function cleverSlice(arr, from, to) {
  * Gets Arguments as Array.
  * Arguments from "arguments" are not a real array. Slice fixes this.
  *
- * @param {ArgumentsObject} args Arguments Object similar to array
+ * @param {import('./types/ts/index.js').ArgumentsObject} args Arguments Object similar to array
  * @param {Number} from
  * @param {Number} to
  * @return {*[]}
@@ -261,7 +250,7 @@ export function exportData(data) {
    * @deprecated
    * @param {Object} dataSet dataSet is simple obj  with key/value pairs.
    * @param {String} url
-   * @param {AjaxResponseOptions} options
+   * @param {import('./types/ts/index.js').AjaxResponseOptions} options
    */
   export function executeAjax(dataSet, url, options) {
   // Default
@@ -328,7 +317,7 @@ export function exportData(data) {
    *
    * @deprecated
    * @param {XMLHttpRequest} xhr
-   * @param {AjaxResponseOptions} options
+   * @param {import('./types/ts/index.js').AjaxResponseOptions} options
    * @return {*}
    */
   export function handleAjaxResponse(xhr, options) {

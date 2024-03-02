@@ -1,63 +1,6 @@
-/**
- * @typedef {Object<string, *>} Dictionary
- */
 
 /**
- * @typedef {object} LimitRange
- * @property {number} min
- * @property {number} max
- */
-
-/**
- * @typedef {object} Dimensions
- * @property {LimitRange} width
- * @property {LimitRange} height
- */
-
-/**
- * @typedef {object} ProbabilityBoolean
- * @property {number} percentage
- * @property {string} level
- * @property {boolean} bool
- */
-/**
-
-/**
- * @typedef {object} StringPosition
- * @property {number} startIndex
- * @property {number} endIndex
- * @property {string} value
- */
-
-/**
- * @typedef {[number, number]} ArrayRange [startIndex, endIndex]
- */
-
-/**
- * @typedef {'readAsArrayBuffer'|'readAsBinaryString'|'readAsDataURL'|'readAsText'} FILE_READER_METHOD_NAMES
- */
-
-/**
- * @typedef {Object} CustomElementBase
- * @property {string} rawTemplate
- * @property {Object<string, string>} htmlData
- * @property {string} html
- * @property {string} css
- * @property {ShadowRoot|HTMLElement|null} element
- *
- * @typedef {HTMLElement & CustomElementBase} CustomElement
- */
-
-/**
- * @typedef {Object} CustomElementOptions
- * @property {string} [html]
- * @property {Object<string, string>} [htmlData]
- * @property {string} [css]
- * @property {function(string, Object<string, string>):string} [renderer]
- */
-
-/**
- * @return {StringPosition}
+ * @return {import("./types/ts").StringPosition}
  */
 function stringPosition() {
     return {
@@ -67,27 +10,10 @@ function stringPosition() {
     }
 }
 
-/**
- * @typedef {object} MultipleUrlLoadingOptions
- * @property {boolean} ordered
- * @property {HTMLElement} parent
- */
+
 
 /**
- * @typedef {'trace'|'debug'|'log'|'info'|'warn'|'error'} ConsoleLogType
- */
-
-/**
- * @typedef {object} LogOptions
- * @property {boolean} prettify
- * @property {string} title
- * @property {function|null} beforeLog
- * @property {function|null} afterLog
- * @property {ConsoleLogType} type
- */
-
-/**
- * @return {LogOptions}
+ * @return {import("./types/ts").LogOptions}
  */
 function logOptions() {
     return {
@@ -99,18 +25,7 @@ function logOptions() {
     }
 }
 
-/**
- * @typedef {object} AsyncHandlerItem
- * @property {null|(function(...*):void)} handle
- * @property {*[]} args
- * @property {number} callbackParamIndex
- * @property {number} index
- */
 
-/**
- * @typedef {object} EventOptions
- * @property {boolean} spreadArgs
- */
 /**
  * Base utility file.
  * Should not be dependent on code outside this file.
@@ -227,21 +142,13 @@ export function promisify(handle, args, resolveIndex) {
  * Handles multiple async functions.
  * TODO: Needs checking!!(handle, status.current positioning looks iffy.)
  *
- * @param {AsyncHandlerItem[]} arr Array of items. See code.
+ * @param {import("./types/ts").AsyncHandlerItem[]} arr Array of items. See code.
  * @param {Function} onEnd
  * @return {Boolean}
  */
 export function asyncHandler(arr, onEnd) {
-
     /**
-     * @typedef {object} AsyncHandlerStatus
-     * @property {number} current
-     * @property {number} total
-     * @property {*[]} returned
-     */
-
-    /**
-     * @type {AsyncHandlerStatus}
+     * @type {import("./types/ts").AsyncHandlerStatus}
      */
     const status = {
         current: 0,
@@ -338,7 +245,7 @@ export function exists(data) {
 }
 
 /**
- * @param {Dimensions} dimensions
+ * @param {import("./types/ts").Dimensions} dimensions
  * @return {string}
  */
 export function buildMediaQuery(dimensions) {
@@ -383,8 +290,8 @@ export function promptPrint() {
 /**
  * Logging function that won't cause error if does not exist, and includes some options.
  *
- * @param {*} data
- * @param {LogOptions|undefined} options See link
+ * @param {any} data
+ * @param {import("./types/ts").LogOptions|undefined} options See link
  * @see https://developers.google.com/web/tools/chrome-devtools/console/console-write#styling_console_output_with_css
  */
 export function log(data, options = undefined) {
@@ -397,7 +304,7 @@ export function log(data, options = undefined) {
     }
 
     /**
-     * @type {ConsoleLogType}
+     * @type {import("./types/ts").ConsoleLogType}
      */
     let type = 'log'
     if (options.type && options.type in window.console) {
@@ -436,7 +343,7 @@ export function getDataUrlExtension(dataUrl) {
 /**
  * Download data
  *
- * @param {*} data
+ * @param {any} data
  * @param {String} name
  * @param {String} mimeType
  */
@@ -841,7 +748,7 @@ export function getCurrentLocation(callback) {
  *
  * @param {DragEvent|Event} event
  * @param {Function} callback
- * @param {{method: FILE_READER_METHOD_NAMES}} options
+ * @param {{method: import("./types/ts").FILE_READER_METHOD_NAMES}} options
  * @return {FileReader}
  */
 export function loadFileInput(event, callback, options) {
@@ -1033,7 +940,7 @@ export function getLoadTemplateHandle(src, parent) {
  * Removed: param {Boolean} optionsAbstract ordered default false because order not usually important.
  * @param {string[]} arr array of link href urls.
  * @param {function(string, HTMLElement):*} handle
- * @param {Partial<MultipleUrlLoadingOptions>} options
+ * @param {Partial<import("./types/ts").MultipleUrlLoadingOptions>} options
  * @return {Promise<*[]>}
  */
 export function loadAbstractUrls(arr, handle, options = {}) {
@@ -1440,24 +1347,7 @@ export function isLogFunction(func) {
  */
 export function getStackInfo() {
     /**
-     * @typedef {object} StackPart
-     * @property {string} function
-     * @property {number|null} lineNumber
-     * @property {number|null} columnNumber
-     */
-
-    /**
-     * @typedef {object} StackInfo
-     * @property {Error|null} error
-     * @property {string} stack
-     * @property {string|null} function
-     * @property {StackPart[]} stackParts
-     * @property {number|null} lineNumber
-     * @property {number|null} columnNumber
-     */
-
-    /**
-     * @type {StackInfo}
+     * @type {import("./types/ts").StackInfo}
      */
     const info = {
         error: null,
@@ -1483,7 +1373,7 @@ export function getStackInfo() {
             }
 
             /**
-             * @type {StackPart}
+             * @type {import("./types/ts").StackPart}
              */
              const stackPart = {
                 function: '',
@@ -1523,7 +1413,7 @@ export function getStackInfo() {
  * Loops class instance functions.
  * Ignores constructor.
  *
- * @param {Dictionary} classInstance
+ * @param {import("./base-object-helper").Dictionary} classInstance
  * @param {function(function(...*):any, string, Object<string, *>):void} onFunction
  */
 export function loopClassFunctions(classInstance, onFunction) {
@@ -1537,7 +1427,7 @@ export function loopClassFunctions(classInstance, onFunction) {
 /**
  * Loops class instance properties.
  *
- * @param {Dictionary} classInstance
+ * @param {import("./base-object-helper").Dictionary} classInstance
  * @param {Function} onProperty
  */
 export function loopClassProperties(classInstance, onProperty) {
@@ -1593,7 +1483,7 @@ export function loopStaticClassMethods() {
  * Binds class instance to all functions.
  * Used so no need to worry about using this in classes.
  *
- * @param {Dictionary} classInstance
+ * @param {import("./base-object-helper").Dictionary} classInstance
  */
 export function bindClassThis(classInstance) {
     loopClassFunctions(classInstance, (value, name) => { // TODO: try with obj instead of same class instance.
@@ -1603,7 +1493,7 @@ export function bindClassThis(classInstance) {
 }
 
 /**
- * @param {Dictionary} classInstance
+ * @param {import("./base-object-helper").Dictionary} classInstance
  * @param {function} constructor
  */
 export function applyStaticFunctions(classInstance, constructor) {
@@ -1704,10 +1594,10 @@ export function sleep(ms) {
  * Detects single mode or array mode by type of events[name]
  * Returns single or array based on single mode type
  *
- * @param {Dictionary} events
+ * @param {import("./base-object-helper").Dictionary} events
  * @param {String} name
  * @param {*} data data passed to event
- * @param {Partial<EventOptions>} options
+ * @param {Partial<import("./types/ts").EventOptions>} options
  * @return {*} Return data(single or array)
  */
 export function handleEvent(events, name, data = undefined, options = {}) {
@@ -1764,8 +1654,8 @@ export function mergeEventsObject(events1, events2) {
     }
 
     /**
-     * @param {Dictionary} from
-     * @param {Dictionary} to
+     * @param {import("./base-object-helper").Dictionary} from
+     * @param {import("./base-object-helper").Dictionary} to
      */
     const mergeEvents = (from, to) => {
         for (let key in from) {
@@ -1959,7 +1849,7 @@ export function promiseAll(arr, ordered = false) {
  *
  * @param {String} data
  * @param {String} mimeType
- * @param {Dictionary} options optional data outputted in format key=value;
+ * @param {import("./base-object-helper").Dictionary} options optional data outputted in format key=value;
  * @return {String}
  */
 export function createDataURI(data, mimeType = 'text/plain', options = {}) {
@@ -2015,7 +1905,7 @@ export function compare(a, b, comparator = '=') {
  * Has margin of error so returns object with information and estimated boolean.
  * Space ratio: <2% <5% <10% Most likely minimized. >10% Most likely not minimized.
  * @param {String} str
- * @return {ProbabilityBoolean}
+ * @return {import("./types/ts").ProbabilityBoolean}
  */
 export function isMinimzed(str) {
     /*
@@ -2080,7 +1970,7 @@ export function isMinimzed(str) {
     const bool = (firstPassIndex !== null) ? firstPassIndex <= HIGHEST_TRUE_INDEX : false
 
     /**
-     * @type {ProbabilityBoolean}
+     * @type {import("./types/ts").ProbabilityBoolean}
      */
     const returnObject = {
         percentage: percentage,
@@ -2128,7 +2018,7 @@ export function watchForHashValue(value, func) {
  * Scans string with function and returns results
  * @param {String} string
  * @param {Function} checker (char)=>{}
- * @return {StringPosition[]} Results array
+ * @return {import("./types/ts").StringPosition[]} Results array
  */
 export function scanString(string, checker) {
     const resultsArray = []
@@ -2315,7 +2205,7 @@ export function stringIncludesAttribute(text, name, value) {
  * Removes ranges of text using string.substring format.
  * Assumes ranges sorted from startIndex end to start.
  * @param {String} text
- * @param {ArrayRange[]} ranges
+ * @param {import("./types/ts").ArrayRange[]} ranges
  * @return {String}
  */
 export function removeSubstringRanges(text, ranges = []) {
@@ -2335,8 +2225,8 @@ export function removeSubstringRanges(text, ranges = []) {
 /**
  * Common format for setting up custom element.
  * Should only include important functionality such as rendering templates.
- * @param {CustomElement} customElement
- * @param {CustomElementOptions} options
+ * @param {import("./types/ts").CustomElement} customElement
+ * @param {import("./types/ts").CustomElementOptions} options
  */
 export function setupCustomElement(customElement, options = {}) {
     /**
