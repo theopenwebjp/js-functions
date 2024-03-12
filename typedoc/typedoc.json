@@ -1,0 +1,11 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["../src/index.js",],
+  "exclude": ["node_modules", "**/node_modules/*", "**/node_modules/**"],
+  "externalPattern": ["**/node_modules/**"],
+  "out": "api_docs",
+  "plugin": [
+    "typedoc-plugin-markdown"
+  ],
+  "tsconfig": "./tsconfig.json"
+}

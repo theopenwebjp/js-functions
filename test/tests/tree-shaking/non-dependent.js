@@ -1,6 +1,6 @@
 import {
   equals
-} from '../../../src/base-utility.js'
+} from '../../../src/utilities.js'
 
 export default function() {
   return [

@@ -6,8 +6,13 @@
 
 ### Namespaces
 
-- [BaseArrayHelper](modules/BaseArrayHelper.md)
-- [BaseObjectHelper](modules/BaseObjectHelper.md)
-- [BaseUtility](modules/BaseUtility.md)
-- [PureFunctions](modules/PureFunctions.md)
-- [Utility](modules/Utility.md)
+- [ArrayHelpers](modules/ArrayHelpers.md)
+- [CanvasHelpers](modules/CanvasHelpers.md)
+- [DOMHelpers](modules/DOMHelpers.md)
+- [FormHelpers](modules/FormHelpers.md)
+- [MediaStreamHelpers](modules/MediaStreamHelpers.md)
+- [MediaStreamTrackHelpers](modules/MediaStreamTrackHelpers.md)
+- [ObjectHelpers](modules/ObjectHelpers.md)
+- [Polyfills](modules/Polyfills.md)
+- [Services](modules/Services.md)
+- [Utilities](modules/Utilities.md)

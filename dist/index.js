@@ -1,9 +1,14 @@
-"use strict";
-const JsFunctions = {
-    BaseArrayHelper: require('./base-array-helper'),
-    BaseObjectHelper: require('./base-object-helper'),
-    BaseUtility: require('./base-utility'),
-    PureFunctions: require('./pure-functions'),
-    Utility: require('./utility')
-};
-module.exports = JsFunctions;
+import { polyfillConsole } from './polyfills.js';
+polyfillConsole();
+console.warn('ONLY USE WHEN ALL EXPORTS ARE DESIRED.');
+import * as ArrayHelpers from './array-helpers.js';
+import * as CanvasHelpers from './canvas-helpers.js';
+import * as DOMHelpers from './dom-helpers.js';
+import * as FormHelpers from './form-helpers.js';
+import * as MediaStreamHelpers from './media-stream-helpers.js';
+import * as MediaStreamTrackHelpers from './media-stream-track-helpers.js';
+import * as ObjectHelpers from './object-helpers.js';
+import * as Polyfills from './polyfills.js';
+import * as Services from './services.js';
+import * as Utilities from './utilities.js';
+export { ArrayHelpers, CanvasHelpers, DOMHelpers, FormHelpers, MediaStreamHelpers, MediaStreamTrackHelpers, ObjectHelpers, Polyfills, Services, Utilities, };

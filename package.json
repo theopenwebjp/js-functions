@@ -1,7 +1,7 @@
 {
     "name": "@theopenweb/js-functions",
     "type": "module",
-    "version": "1.2.0",
+    "version": "2.0.0",
     "description": "Set of general/common utility functions that can be used in JavaScript. Uses es6 exports.",
     "main": "./src/index.js",
     "directories": {
@@ -20,11 +20,15 @@
         "docs": "npm run api-docs && npm run eslint",
         "test-treeshaking": "cd ./test/tests/tree-shaking && webpack --config ./webpack.config.cjs",
         "test-nyc": "nyc --reporter=html mocha ./test/tests/browser/tests/*.js --require esm -r jsdom-global/register",
-        "api-docs": "typedoc --plugin typedoc-plugin-markdown --out api_docs ./src/index.js",
+        "api-docs": "typedoc --plugin typedoc-plugin-markdown --out api_docs --options typedoc/typedoc.json",
         "eslint": "gulp --gulpfile ./gulpfile.cjs eslint",
-        "pre-commit": "npm run test && npm run docs && tsc && git add ."
+        "pre-commit": "npm run test && npm run docs && tsc"
     },
     "devDependencies": {
+        "@types/chai": "^4.3.12",
+        "@types/gulp": "^4.0.17",
+        "@types/jsdom": "^21.1.6",
+        "@types/mocha": "^10.0.6",
         "@types/node": "^20.11.24",
         "chai": "^5.1.0",
         "eslint": "^8.57.0",

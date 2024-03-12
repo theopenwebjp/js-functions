@@ -1,5 +1,5 @@
-import * as BaseArrayHelper from '../../../src/base-array-helper.js'
+import * as ArrayHelpers from '../../../src/array-helpers.js'
 
 export default function () {
-  return BaseArrayHelper
+  return ArrayHelpers
 }

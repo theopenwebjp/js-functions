@@ -1,0 +1,24 @@
+export function startRecordingStream(stream: MediaStream, dataHandle: ((this: MediaRecorder, ev: BlobEvent) => any) | null, options?: MediaRecorderOptions): MediaRecorder;
+export function stopRecordingStream(recorder: MediaRecorder): void;
+export function createStreamVideoElement(stream: MediaStream): HTMLVideoElement;
+export function streamHasVideo(stream: MediaStream): boolean;
+export function streamHasAudio(stream: MediaStream): boolean;
+export function getUserMedia(callback: (streamOrError: MediaStream | import('./types/ts/index.js').StreamError) => void, constraints: MediaStreamConstraints): void;
+export function handleCameraStream(stream: MediaStream | import('./types/ts/index.js').StreamError, object?: import('./types/ts/index.js').StreamObject | undefined): null | import('./types/ts/index.js').StreamObject;
+export function stopCameraStream(stream: MediaStream): void;
+export function stopCameraStreamObject(o: import('./types/ts/index.js').StreamObject, removeFromDom?: boolean): void;
+export function getStreamTracks(stream: MediaStream): MediaStreamTrack[];
+export function getTracksByStatus(stream: MediaStream, status: boolean): MediaStreamTrack[];
+export function getTracksByType(stream: MediaStream, type: string): MediaStreamTrack[];
+export function getTracksByAttribute(stream: MediaStream, attr: keyof MediaStreamTrack, value: any): MediaStreamTrack[];
+export function StreamError(): import('./types/ts/index.js').StreamError;
+export function StreamObject(): import('./types/ts/index.js').StreamObject;
+export function polyfillGetUserMedia(): void;
+export function getPolyfilledGetUserMedia(): import("./types/ts/index.js").NavigatorGetUserMedia;
+export function webcamToElement(constraints: MediaStreamConstraints, element: HTMLElement, callback: (streamObject: import('./types/ts/index.js').StreamObject | import('./types/ts/index.js').StreamError) => void): void;
+export function getUnlimitedConstraints(): MediaStreamConstraints;
+export function getBestConstraints(): Promise<any>;
+export function getStreamConstraints(stream: MediaStream): MediaStreamConstraints;
+export function getUserMediaWithWorkingConstraints(constraints: MediaStreamConstraints | undefined, onSuccess: import('./types/ts/index.js').NavigatorUserMediaSuccessCallback, onError: (arg0: Error) => void): void;
+export function getEmptyStream(): MediaStream;
+//# sourceMappingURL=media-stream-helpers.d.ts.map

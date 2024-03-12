@@ -4,27 +4,31 @@
 
 ## Introduction
 
-Set of general functions that can be used in JavaScript.
-May include stand-alone functions.
-
-No dependencies are expected to load this library.
-Node.js have been moved to a separate repository due to need for node based dependencies.
-
-Functions may be broken up into classes over time.
-Functions may be made into modular(js modules) code over time.
-Should not be too complex. If deep dependencies are desired, then create another Utility class dependent on this module.
-
-Base files should have no dependencies.
-utility: Dependent on window/DOM browser environment.
-
-THIS LIBRARY IS MEANT AS A SMALL LIBRARY FOR UTILITY FUNCTIONS.
-IT SHOULD NOT INCLUDE ANY DEPENDENDENCIES OTHER THAN devDependencies.
+- Set of general functions that can be used in JavaScript(browser).
+- Code uses ESM.
+- This library SHOULD NOT include any dependencies OTHER THAN devDependencies.
+- Code is made to be efficiently tree-shaken.
 
 ## Installation
 
 ```bash
 npm install @theopenweb/js-functions
 ```
+
+## Usage
+
+```js
+// Example of import and execution.
+import { capitalize } from '@theopenweb/js-functions'
+console.log(capitalize('smith'))
+// For the full API, check "Documentation".
+```
+
+## Documentation
+
+- [Documentation](/api_docs/modules.md)
+- Generated documentation is accessible from: [/api_docs/modules.md](/api_docs/modules.md)
+- To run all documentation scripts, execute: `npm run docs`.
 
 ## Testing
 
@@ -44,21 +48,10 @@ Tests may be incomplete. Please run to check the status.
 `npm run test` will automatically show coverage of tests.
 An HTML coverage report will be generated in the "coverage" directory.
 
-## Format
-
-Utility: Non dependent functions.
-Other files have dependencies stated in name of file or in code.
-
-## Documentation
-
-To run all documentation scripts, execute: `npm run docs`.
-
-Generated documentation is accessible from: [./api_docs/modules.md](./api_docs/modules.md)
-
 ## Linting
 
 `npm run eslint` will generate linting reports.
 
 ## Contributors
 
-Damien Golding
+- Damien Golding

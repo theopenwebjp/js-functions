@@ -1,7 +1,7 @@
 import {
   dataInArray,
   cleverSlice
-} from '../../../src/utility.js'
+} from '../../../src/utilities.js'
 
 export default function() {
   return [

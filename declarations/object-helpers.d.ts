@@ -1,0 +1,28 @@
+export function copyObject(obj: Object): any;
+export function copyObjectData(obj: Dictionary): Dictionary;
+export function applyObj(from: Dictionary, to: Dictionary, condition: (arg0: string, arg1: Dictionary, arg2: Dictionary) => boolean): Dictionary;
+export function getObjectKeyValueAtIndex(obj: Dictionary, index: number): Object;
+export function getObjectKeys(obj: Object): string[];
+export function expandCommonObjectIntoObject(obj: import('./types/ts/index.js').CommonObject, parentObj: import('./types/ts/index.js').CommonObject, insertIndex?: number): import('./types/ts/index.js').CommonObject;
+export function logObjectOnSingleLine(obj: Dictionary): void;
+export function isObject(obj: any): boolean;
+export function isNonDomObject(obj: any): boolean;
+export function isCommonObject(obj: any): boolean;
+export function objectToObjectInfoArray(obj: Dictionary, curDepth?: number, arr?: ObjectInfo[]): ObjectInfo[];
+export function objectInfo(depth: number, key: any, value: any): ObjectInfo;
+export function getAddedVariableNames(obj: Object, beforeKeys: string[]): string[];
+export function getRemovedVariableNames(obj: Object, beforeKeys: string[]): string[];
+export function filterObjectVariables(obj: Dictionary, keys: string[]): Object;
+export function globalize(obj: Dictionary): void;
+export function renameObjectKey(obj: Dictionary, oldKey: string, newKey: string): void;
+export function getKeyChanges(oldObj: Dictionary, newObj: Dictionary): Dictionary;
+export function objectToReadableString(obj: Object, onError?: Function | undefined): string;
+export function watchObjectProperty(obj: Dictionary, key: string, options?: Partial<WatchOptions>): WatchObject;
+export function keyValueObjToArrays(obj: import('./types/ts/index.js').Dictionary): Array<[string, any]>;
+export type Dictionary = import('./types/ts/index.js').Dictionary;
+export type ObjectInfo = import('./types/ts/index.js').ObjectInfo;
+export type KeyValue = import('./types/ts/index.js').KeyValue;
+export type GetterSetter = import('./types/ts/index.js').GetterSetter;
+export type WatchOptions = import('./types/ts/index.js').WatchOptions;
+export type WatchObject = import('./types/ts/index.js').WatchObject;
+//# sourceMappingURL=object-helpers.d.ts.map

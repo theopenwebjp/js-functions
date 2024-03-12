@@ -17,12 +17,11 @@ const fs = require('fs')
 // https://stackoverflow.com/a/29802434/1764521
 
 gulp.task('eslint', function () {
-  gulp.src(['./src/*.js'])
+  return gulp.src(['./src/*.js'])
     .pipe(eslint({
-      configFile: './.eslintrc'
+      overrideConfigFile: './.eslintrc'
     }))
     .pipe(eslint.format(reporter, function (results) {
       fs.writeFileSync(path.join(__dirname, 'report-results.html'), results)
-        })
-    )
+    }))
 })
