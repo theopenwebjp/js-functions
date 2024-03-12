@@ -17,7 +17,7 @@ npm install @theopenweb/js-functions
 
 ```js
 // Example of import and execution.
-import { capitalize } from '@theopenweb/js-functions'
+import { capitalize } from '@theopenweb/js-functions/src/utilities.js'
 console.log(capitalize('smith'))
 // For the full API, check "Documentation".
 ```
