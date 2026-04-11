@@ -58,4 +58,6 @@ typings/
 .env
 
 # dist
-bundle.js
+dist
+
+.report-results.html

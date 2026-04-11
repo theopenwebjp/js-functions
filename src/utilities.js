@@ -1,4 +1,3 @@
-
 /**
  * @return {import('./types/ts/index.js').StringPosition}
  */
@@ -9,8 +8,6 @@ function stringPosition() {
     value: ''
   }
 }
-
-
 
 /**
  * @return {import('./types/ts/index.js').LogOptions}
@@ -24,7 +21,6 @@ function logOptions() {
     type: 'log' // console functions: log, info, warn, error, ...
   }
 }
-
 
 /**
  * Base utility file.

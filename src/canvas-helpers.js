@@ -357,8 +357,6 @@ import { failOnFalsy } from './utilities.js'
     }
   }
 
-  
-
   /**
    * @param {ImageData} imgData 
    * @param {(rgba: import('./types/ts/index.js').RGBA, index: number) => void} onPixel

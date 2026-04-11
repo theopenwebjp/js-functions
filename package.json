@@ -1,16 +1,15 @@
 {
     "name": "@theopenweb/js-functions",
     "type": "module",
-    "version": "2.0.1",
+    "version": "2.1.0",
     "description": "Set of general/common utility functions that can be used in JavaScript. Uses es6 exports.",
-    "main": "./src/index.js",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
     "directories": {
         "test": "tests"
     },
     "files": [
-        "declarations",
         "dist",
-        "src",
         "package.json",
         "LICENSE",
         "readme.md"
@@ -21,33 +20,34 @@
         "test-treeshaking": "cd ./test/tests/tree-shaking && webpack --config ./webpack.config.cjs",
         "test-nyc": "nyc --reporter=html mocha ./test/tests/browser/tests/*.js --require esm -r jsdom-global/register",
         "api-docs": "typedoc --plugin typedoc-plugin-markdown --out api_docs --options typedoc/typedoc.json",
-        "eslint": "gulp --gulpfile ./gulpfile.cjs eslint",
-        "pre-commit": "npm run test && npm run docs && tsc"
+        "eslint": "eslint --config .eslintrc \"./src/**/*.js\" --format html --output-file report-results.html",
+        "ts-lint": "tsc --noEmit",
+        "clean": "npx rimraf dist",
+        "build": "npm run clean && tsc",
+        "pre-commit": "npm run test && npm run docs && npm run build"
     },
     "devDependencies": {
-        "@types/chai": "^4.3.12",
-        "@types/gulp": "^4.0.17",
-        "@types/jsdom": "^21.1.6",
-        "@types/mocha": "^10.0.6",
-        "@types/node": "^20.11.24",
-        "chai": "^5.1.0",
-        "eslint": "^8.57.0",
+        "@types/chai": "^5.2.2",
+        "@types/jsdom": "^21.1.7",
+        "@types/mocha": "^10.0.10",
+        "@types/node": "^24.3.0",
+        "chai": "^6.0.1",
+        "eslint": "^9.34.0",
         "eslint-html-reporter": "^0.7.4",
         "esm": "^3.2.25",
-        "gulp": "^4.0.2",
-        "gulp-eslint-new": "^1.9.1",
         "hamburgers": "^1.2.1",
         "jquery": "^3.7.1",
-        "jsdom": "24.0.0",
+        "jsdom": "26.1.0",
         "jsdom-global": "3.0.2",
         "jsuri": "^1.3.1",
-        "mocha": "^10.3.0",
-        "nyc": "^15.1.0",
-        "typedoc": "^0.25.9",
-        "typedoc-plugin-markdown": "^3.17.1",
-        "typescript": "^5.3.3",
-        "webpack": "^5.90.3",
-        "webpack-cli": "^5.1.4"
+        "mocha": "^11.7.1",
+        "nyc": "^17.1.0",
+        "rimraf": "^6.1.3",
+        "typedoc": "^0.28.11",
+        "typedoc-plugin-markdown": "^4.8.1",
+        "typescript": "^5.9.2",
+        "webpack": "^5.101.3",
+        "webpack-cli": "^6.0.1"
     },
     "keywords": [
         "functions",
@@ -69,6 +69,5 @@
     },
     "private": false,
     "license": "MIT",
-    "types": "./declarations/index.d.ts",
     "sideEffects": false
 }
