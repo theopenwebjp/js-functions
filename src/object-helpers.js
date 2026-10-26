@@ -16,11 +16,11 @@
    * @param {Object} obj
    */
 export function copyObject(obj) {
-  try {
-    return JSON.parse(JSON.stringify(obj))
-  } catch (err) {
-    return {}
+  const serialized = JSON.stringify(obj)
+  if (serialized === undefined) {
+    throw new TypeError('Value cannot be copied as JSON')
   }
+  return JSON.parse(serialized)
 }
 
 /**
@@ -58,14 +58,19 @@ export function applyObj(from, to, condition) {
     throw new Error('Failed object check')
   }
 
-  for (let key in from) {
+  for (const key of Object.keys(from)) {
     // Condition handling
     if (condition && !condition(key, from, to)) {
       continue
     }
 
     // Set
-    to[key] = from[key]
+    Object.defineProperty(to, key, {
+      value: from[key],
+      configurable: true,
+      enumerable: true,
+      writable: true
+    })
   }
 
   return to
@@ -416,8 +421,18 @@ export function watchObjectProperty(obj, key, options = {}) {
     obj['a'] = 1;
     */
 
-  const get = options.get || function () { }
-  const set = options.set || function () { }
+  const originalDescriptor = Object.getOwnPropertyDescriptor(obj, key)
+  if (originalDescriptor && !originalDescriptor.configurable) {
+    throw new TypeError(`Cannot watch non-configurable property: ${key}`)
+  }
+  let value = obj[key]
+  const get = options.get || originalDescriptor?.get || (() => value)
+  const set = options.set || originalDescriptor?.set || (nextValue => {
+    if (originalDescriptor && 'writable' in originalDescriptor && !originalDescriptor.writable) {
+      throw new TypeError(`Cannot assign to read-only property: ${key}`)
+    }
+    value = nextValue
+  })
   /**
    * @type {GetterSetter}
    */
@@ -436,10 +451,17 @@ export function watchObjectProperty(obj, key, options = {}) {
     options: completeOptions,
 
     stop: function () {
-      Object.defineProperty(obj, key, {
-        get: undefined,
-        set: undefined
-      })
+      if (originalDescriptor) {
+        if ('value' in originalDescriptor) originalDescriptor.value = value
+        Object.defineProperty(obj, key, originalDescriptor)
+      } else {
+        Object.defineProperty(obj, key, {
+          value,
+          configurable: true,
+          enumerable: true,
+          writable: true
+        })
+      }
     }
   }
 

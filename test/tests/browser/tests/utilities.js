@@ -452,6 +452,12 @@ describe('utilities', function () {
   })
 
   describe('promiseAll', function () {
+    it('resolves an empty ordered list', () => {
+      return Utilities.promiseAll([], true).then(values => {
+        chai.expect(values).to.deep.equal([])
+      })
+    })
+
     it('resolves promises unordered', () => {
       const h1 = () => { return Promise.resolve(1) }
       const h2 = () => { return Promise.resolve(2) }
@@ -486,6 +492,45 @@ describe('utilities', function () {
         .then((arr) => {
           chai.expect(arr).to.deep.equal([1, 4, 6])
         })
+    })
+  })
+
+  describe('timeout', function () {
+    it('propagates the original rejection', () => {
+        const expectedError = new Error('failure')
+        return Utilities.timeout(Promise.reject(expectedError), 100)
+          .then(() => chai.assert.fail('Expected promise rejection'))
+          .catch(error => chai.expect(error).to.equal(expectedError))
+    })
+  })
+
+  describe('parseFuzzyJson', function () {
+    it('does not evaluate JavaScript expressions', () => {
+        chai.expect(Utilities.parseFuzzyJson('({a: 1})')).to.equal(null)
+    })
+  })
+
+  describe('traverseObject', function () {
+    it('visits cyclic graphs once without traversing inherited keys', () => {
+        const value = { child: {} }
+        value.child.parent = value
+        const inherited = Object.create({ inherited: true })
+        inherited.value = value
+        const visited = []
+
+        Utilities.traverseObject(inherited, (parent, key) => visited.push(key))
+
+        chai.expect(visited).to.deep.equal(['value', 'child', 'parent'])
+    })
+  })
+
+  describe('Unicode base64 helpers', function () {
+    it('encodes and decodes Unicode symmetrically', () => {
+        const text = 'a Ā 𐀀 文 🦄'
+        const encoded = Utilities.btoaUnicode(text)
+
+        chai.expect(encoded).to.equal('YSDEgCDwkICAIOaWhyDwn6aE')
+        chai.expect(Utilities.atobUnicode(encoded)).to.equal(text)
     })
   })
 

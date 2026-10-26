@@ -23,10 +23,7 @@ export function getLabelElement(element) {
   if (id) {
     // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/label
     // Not connected to form by spec.
-    const elements = /** @type {HTMLLabelElement[]} */ ([...Array.from(document.querySelectorAll('[for=' + id + ']'))].filter(el => el instanceof HTMLLabelElement))
-    if (elements[0]) {
-      labelEl = elements[0]
-    }
+    labelEl = Array.from(document.querySelectorAll('label')).find(el => el.htmlFor === id)
   }
 
   return labelEl
@@ -175,13 +172,19 @@ export function checkRequiredInput(el) {
   const type = el.getAttribute('type')
 
   // Checked
+  if (el instanceof HTMLInputElement && type === 'radio') {
+    if (!el.name) return el.checked
+    const root = el.form || el.ownerDocument
+    return Array.from(root.querySelectorAll('input[type="radio"]'))
+      .some(input => input instanceof HTMLInputElement && input.name === el.name && input.checked)
+  }
+  if (el instanceof HTMLInputElement && type === 'checkbox') {
+    return el.checked
+  }
   if (
-    el.tagName === 'input' &&
-    (type === 'radio' || type === 'checkbox') &&
-    getCheckedElements(el).length === 0
+    (el instanceof HTMLInputElement || el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement) &&
+    !el.value.trim()
   ) {
-    return false
-  } else if (el instanceof HTMLInputElement && !el.value) { // Input default
     return false
   }
 
@@ -212,7 +215,8 @@ export function setInputAsRequired(el) {
  * TODO
  */
 export function getRequiredInputs(form) {
-  return getElementsWithAttribute(constants.REQUIRED_ATTR)
+  return Array.from(form.querySelectorAll(`[${constants.REQUIRED_ATTR}]`))
+    .filter(element => element instanceof HTMLElement)
 }
 
 /**
@@ -223,7 +227,7 @@ export function handleSubmit(ev) {
   const form = ev.target
   if (!(form instanceof HTMLFormElement)) throw new Error('Not form')
   const bool = checkRequiredInputs(form)
-  if (!bool || bool) {
+  if (!bool) {
     window.alert('Please fill in all required inputs.')
   }
 

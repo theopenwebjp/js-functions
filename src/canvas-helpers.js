@@ -313,7 +313,12 @@ import { failOnFalsy } from './utilities.js'
    * @param {CanvasRenderingContext2D} ctx
    */
   export function getContextBoundingRect (ctx) {
-    const boundingRect = BoundingRect()
+    const boundingRect = {
+      top: ctx.canvas.height,
+      bottom: -1,
+      left: ctx.canvas.width,
+      right: -1
+    }
     const canvas = ctx.canvas
     const cWidth = canvas.width
     const cHeight = canvas.height
@@ -324,24 +329,27 @@ import { failOnFalsy } from './utilities.js'
     for (let i = 0; i < data.length; i += step) {
       if (data[i + 0] || data[i + 1] || data[i + 2]) { // Has a color value
         const index = i / step
-        const x = index % cHeight
+        const x = index % cWidth
         const y = Math.floor(index / cWidth)
 
-        if (boundingRect.top === 0 || y < boundingRect.top) {
+        if (y < boundingRect.top) {
           boundingRect.top = y
         }
-        if (boundingRect.bottom === 0 || y > boundingRect.bottom) {
+        if (y > boundingRect.bottom) {
           boundingRect.bottom = y
         }
-        if (boundingRect.left === 0 || x < boundingRect.left) {
+        if (x < boundingRect.left) {
           boundingRect.left = x
         }
-        if (boundingRect.right === 0 || x > boundingRect.right) {
+        if (x > boundingRect.right) {
           boundingRect.right = x
         }
       }
     }
 
+    if (boundingRect.bottom < 0) {
+      return BoundingRect()
+    }
     return boundingRect
   }
 
@@ -362,13 +370,14 @@ import { failOnFalsy } from './utilities.js'
    * @param {(rgba: import('./types/ts/index.js').RGBA, index: number) => void} onPixel
    */
   export function loopImageData(imgData, onPixel) {
-    for (let i = 0; i < imgData.height * imgData.height; i += 4) {
-      /** @type {import('./types/ts/index.js').RGBA} */
-      // @ts-ignore
-      const rgba = [
-        ...imgData.data.slice(i, 4)
-      ]
-      onPixel(rgba, i)
+    for (let i = 0; i < imgData.data.length; i += 4) {
+      const rgba = /** @type {import('./types/ts/index.js').RGBA} */ ([
+        imgData.data[i],
+        imgData.data[i + 1],
+        imgData.data[i + 2],
+        imgData.data[i + 3]
+      ])
+      onPixel(rgba, i / 4)
     }
   }
 
@@ -390,6 +399,20 @@ import { failOnFalsy } from './utilities.js'
   * @param {number} [threshold]
   */
   export function getMainColor(imgData, threshold = 0) {
+    if (threshold <= 0) {
+      const counts = new Map()
+      loopImageData(imgData, (rgba, index) => {
+        const key = rgba.join(',')
+        const color = counts.get(key)
+        if (color) {
+          color.count += 1
+        } else {
+          counts.set(key, { rgba, count: 1, index })
+        }
+      })
+      return getMaxRGBACount([...counts.values()])
+    }
+
     /** @type {import('./types/ts/index.js').RGBACount[]} */
     const colors = []
     loopImageData(imgData, (rgba, index) => {

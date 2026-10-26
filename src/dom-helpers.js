@@ -119,7 +119,7 @@ export function ChildrenSettings(options) {
 export function createElements(settingsArr, defaults) {
   const elements = settingsArr.map(function (settings) {
     if (defaults) {
-      settings = combineObjects([settingsArr, defaults])
+      settings = combineObjects([defaults, settings])
     }
 
     return createElement(settings)
@@ -142,7 +142,7 @@ export function createElement(options) {
   if (settings.children.length > 0) {
     _setChildren(el, settings.children)
   } else if (settings.innerHTML !== '') {
-    el.innerHTML = settings.innerHTML
+    el.textContent = settings.innerHTML
   } else {
     el.textContent = settings.textContent
   }
@@ -177,7 +177,7 @@ export function createTable(rows) {
 
     for (let j = 0; j < cols.length; j++) {
       let td = document.createElement('td')
-      td.innerHTML = cols[j]
+      td.textContent = cols[j]
 
       tr.appendChild(td)
     }
@@ -245,7 +245,7 @@ export function createList(arr) {
     if (typeof item === 'object' && item.nodeType) {
       li.appendChild(item)
     } else {
-      li.innerHTML = String(item)
+      li.textContent = String(item)
     }
 
     ul.appendChild(li)
@@ -500,7 +500,7 @@ export function createBreadcrumbList(links, separator) {
 
     if (link.url) {
       const a = document.createElement('a')
-      a.setAttribute('href', link.url)
+      setAttributes(a, { href: link.url })
       a.textContent = link.text
       span.appendChild(a)
     } else {
@@ -592,16 +592,12 @@ export function clearForm(form) {
 * @param {Object<string, function(...any):void>} events
 */
 export function _setEvents(el, events) {
-  let event
-  for (let key in events) {
-    event = events[key]
-
-    // String = DOM attribute based event
-    if (typeof event === 'string') {
-      el.setAttribute('on' + key, event)
-    } else {
-      el.addEventListener(key, event)
+  for (const key of Object.keys(events)) {
+    const event = events[key]
+    if (typeof event !== 'function') {
+      throw new TypeError(`Event handler for "${key}" must be a function`)
     }
+    el.addEventListener(key, event)
   }
 }
 
@@ -706,8 +702,22 @@ export function appendChildren(el, children) {
 * @param {Object<string, string>} attributes
 */
 export function setAttributes(el, attributes) {
-  for (let key in attributes) {
-    el.setAttribute(key, attributes[key])
+  for (const key of Object.keys(attributes)) {
+    const normalizedKey = key.toLowerCase()
+    const value = String(attributes[key])
+    const normalizedValue = value.replace(/[\u0000-\u0020]+/g, '').toLowerCase()
+
+    if (normalizedKey.startsWith('on') || normalizedKey === 'srcdoc') {
+      throw new TypeError(`Unsafe attribute: ${key}`)
+    }
+    if (
+      ['href', 'src', 'action', 'formaction', 'xlink:href'].includes(normalizedKey) &&
+      /^(javascript:|vbscript:|data:text\/html|data:application\/xhtml\+xml|data:image\/svg\+xml)/.test(normalizedValue)
+    ) {
+      throw new TypeError(`Unsafe URL in attribute: ${key}`)
+    }
+
+    el.setAttribute(key, value)
   }
 }
 
@@ -802,7 +812,7 @@ export function formify(el, fOptions) {
         return false
       })
     } else {
-      form.setAttribute('action', options.action)
+      setAttributes(form, { action: options.action })
     }
   }
 
@@ -1856,7 +1866,7 @@ export function convertArrToTableElement(arr) {
     tr = document.createElement('tr')
     for (j = 0; j < arr[i].length; j++) {
       td = document.createElement('td')
-      td.innerHTML = arr[i][j]
+      td.textContent = arr[i][j]
       tr.appendChild(td)
     }
     table.appendChild(tr)
@@ -1904,7 +1914,7 @@ export function elementChainer(el) {
      * @param {string} html 
      */
     innerHTML: (html) => {
-      el.innerHTML = html
+      el.textContent = html
       return chainer
     },
     removeAttribute: (name) => {
@@ -1924,7 +1934,7 @@ export function elementChainer(el) {
       return chainer
     },
     setAttribute: (name, val) => {
-      el.setAttribute(name, val)
+      setAttributes(el, { [name]: val })
       return chainer
     },
     /**
@@ -2037,8 +2047,12 @@ export function createIframeLoader(src, selector) {
     if (!destination) {
       throw new Error(`No destination element with selector: ${selector}`)
     }
+    const url = new URL(src, document.baseURI)
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      throw new TypeError(`Unsupported iframe URL protocol: ${url.protocol}`)
+    }
     const iframe = document.createElement('iframe')
-    iframe.src = src
+    iframe.src = url.href
     destination.appendChild(iframe)
   }
 }
