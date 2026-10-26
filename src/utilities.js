@@ -517,30 +517,13 @@ export function toObject(data, onError = undefined) {
 }
 
 /**
- * Parses JSON data that may be in JS format.
- * Example: {a: 1} instead of {"a": 1}.
- * Because this uses eval, should never use user entered data!
+ * Safely parses strict JSON. JavaScript expressions are rejected.
  *
  * @param {String} str
- * @return {Object}
+ * @return {any|null}
  */
 export function parseFuzzyJson(str) {
-  let obj
-
-  // Try standard JSON
-  obj = parseJson(str)
-  if (obj === null) {
-    // Non-sandboxed(DON'T USE USER CONTENT! DANGEROUS!)
-    try {
-      obj = eval('(' + str + ')') // eslint-disable-line no-eval
-    } catch (err) {
-      obj = null
-    } finally {
-      //
-    }
-  }
-
-  return obj
+  return parseJson(str)
 }
 
 /**
@@ -596,13 +579,14 @@ export function loadFiles(urls, onData) {
   const promises = []
   for (let i = 0; i < urls.length; i++) {
     promises.push(
-      new Promise(function (resolve) {
+      new Promise(function (resolve, reject) {
         loadFile(urls[i], function (data) {
-          if (onData) {
-            data = onData(data)
+          try {
+            resolve(onData ? onData(data) : data)
+          } catch (error) {
+            reject(error)
           }
-          resolve(data)
-        })
+        }, reject)
       })
     )
   }
@@ -621,13 +605,24 @@ export function loadFiles(urls, onData) {
 export function loadFile(url, callback, onError = undefined) {
   const xhttp = new window.XMLHttpRequest()
   xhttp.onreadystatechange = function () {
-    if (this.readyState === 4 && this.status === 200) {
-      callback(xhttp.response)
+    if (this.readyState === 4) {
+      if (this.status >= 200 && this.status < 300) {
+        callback(xhttp.response)
+      } else if (onError) {
+        onError(new Error(`HTTP ${this.status} while loading ${url}`))
+      } else {
+        console.error(`HTTP ${this.status} while loading ${url}`)
+      }
     }
   }
-  if (onError) {
-    xhttp.addEventListener('error', onError)
-  }
+  xhttp.addEventListener('error', event => {
+    if (onError) onError(event)
+    else console.error('Failed to load file', event)
+  })
+  xhttp.addEventListener('abort', event => {
+    if (onError) onError(event)
+    else console.error('File request aborted', event)
+  })
   xhttp.open('GET', url, true)
   xhttp.send()
 
@@ -1744,19 +1739,17 @@ export function urlToBlob(url) {
  */
 export function timeout(promise, ms) {
   return new Promise((resolve, reject) => {
-    /**
-     * @param {*} data
-     */
-    const onEnd = data => {
-      resolve(data)
-    }
-
-    const onTimeout = () => {
-      reject(new Error('timed out'))
-    }
-
-    promise.then(onEnd)
-    sleep(ms).then(onTimeout)
+    const timer = window.setTimeout(() => reject(new Error('timed out')), ms)
+    promise.then(
+      value => {
+        window.clearTimeout(timer)
+        resolve(value)
+      },
+      error => {
+        window.clearTimeout(timer)
+        reject(error)
+      }
+    )
   })
 }
 
@@ -1811,7 +1804,7 @@ export function getPromisesByState(promises, resolved = false) {
 export function promiseAll(arr, ordered = false) {
   if (ordered) {
     if (arr.length === 0) {
-      Promise.resolve([])
+      return Promise.resolve([])
     }
 
     /**
@@ -2686,18 +2679,23 @@ export function failOnFalsy(value) {
 
 /**
  * Simplest way of traversing object.
- * @param {Object} o 
+ * @param {Record<string, *>} o
  * @param {(parent: Object, key: string) => void} onProperty 
  */
 export const traverseObject = (o, onProperty) => {
-  for (const k in o) {
-    onProperty(o, k)
-    // @ts-ignore
-    const v = o[k]
-    if (v && typeof v === 'object') {
-      traverseObject(v, onProperty)
+  const seen = new WeakSet()
+  /**
+   * @param {*} value
+   */
+  const visit = value => {
+    if (!value || typeof value !== 'object' || seen.has(value)) return
+    seen.add(value)
+    for (const key of Object.keys(value)) {
+      onProperty(value, key)
+      visit(value[key])
     }
   }
+  visit(o)
 };
 
 /**
@@ -2705,7 +2703,7 @@ export const traverseObject = (o, onProperty) => {
  * This is for easy copy and pasting when needed so contains NO DEPENDENCIES.
  * Logs changes and the stack.
  * THE RETURNED PROXY OBJECT IS OBSERVED, SO MUST EDIT THE RETURNED VALUE.
- * @param {Object} object
+ * @param {Record<string, *>} object
  * @param {string[]} keys
  * @return {Proxy}
  */
@@ -2714,7 +2712,7 @@ export function createObjectKeyObserver(object, keys = []) {
    * @type {ProxyHandler<*>}
    */
   const handler = {
-    set(target, key, value) {
+    set(target, key, value, receiver) {
       if (keys.includes(String(key))) {
         console.log(`Setting value ${String(key)} as ${value}`)
         try {
@@ -2722,9 +2720,8 @@ export function createObjectKeyObserver(object, keys = []) {
         } catch (error) {
           console.log('Stack', error)
         }
-        target[key] = value
       }
-      return true
+      return Reflect.set(target, key, value, receiver)
     }
   }
   return new Proxy(object, handler)
@@ -2734,93 +2731,50 @@ export function createObjectKeyObserver(object, keys = []) {
  * Simple function for observing(watching) changes on an object.
  * This is for easy copy and pasting when needed so contains NO DEPENDENCIES.
  * Logs changes and the stack.
- * @param {Object} object
+ * @param {Record<string, *>} object
  * @param {string} key
  * @return {function():void} Stops watching.
  */
 export function observeObjectKeys(object, key) {
-  /*
-    * object.watch polyfill
-    *
-    * 2012-04-03
-    *
-    * By Eli Grey, http://eligrey.com
-    * Public Domain.
-    * NO WARRANTY EXPRESSED OR IMPLIED. USE AT YOUR OWN RISK.
-    */
-
-  // object.watch
-  /**
-   * @param {string} prop 
-   * @param {function(string, *, *):*} handler 
-   */
-  function watch(prop, handler) {
-    // @ts-ignore
-    const obj = this
-    let currentVal = obj[prop]
-    const getter = function () {
-      return currentVal
-    }
-    /**
-     * @param {*} val
-     */
-    const setter = function (val) {
-      return currentVal = handler.call(obj, prop, currentVal, val)
-    }
-    if (delete obj[prop]) { // can't watch constants
-      Object.defineProperty(obj, prop, {
-        get: getter,
-        set: setter,
-        enumerable: true,
-        configurable: true
-      })
-    }
-  }
-  if (!('watch' in Object.prototype)) {
-    Object.defineProperty(Object.prototype, 'watch', {
-      enumerable: false,
-      configurable: true,
-      writable: false,
-      value: watch
-    })
+  const descriptor = Object.getOwnPropertyDescriptor(object, key)
+  if (descriptor && !descriptor.configurable) {
+    throw new TypeError(`Cannot observe non-configurable property: ${key}`)
   }
 
-  // object.unwatch
-  /**
-   * @param {*} prop 
-   */
-  function unwatch(prop) {
-    // @ts-ignore
-    const obj = this
-    const p = /** @type {keyof obj} */ (prop)
-    const val = obj[p]
-    delete obj[p] // remove accessors
-    obj[p] = val
-  }
-  if (!('unwatch' in Object.prototype)) {
-    Object.defineProperty(Object.prototype, 'unwatch', {
-      enumerable: false,
-      configurable: true,
-      writable: false,
-      value: unwatch
-    })
-  }
-  // Polyfill end.
-
-  // @ts-ignore
-  const polyfilledObject = /** @type {{watch: typeof watch, unwatch: typeof unwatch}} */ (object)
-  polyfilledObject.watch(key, (key, oldVal, newVal) => {
-    console.log(`Setting key ${key} from ${oldVal} to ${newVal}`)
-    try {
-      throw new Error('Error for catching stack')
-    } catch (error) {
-      console.log('Stack', error)
+  let value = object[key]
+  const read = descriptor?.get || (() => value)
+  const write = descriptor?.set || (nextValue => {
+    if (descriptor && 'writable' in descriptor && !descriptor.writable) {
+      throw new TypeError(`Cannot assign to read-only property: ${key}`)
     }
-    return newVal
+    value = nextValue
+  })
+
+  Object.defineProperty(object, key, {
+    configurable: true,
+    enumerable: descriptor ? descriptor.enumerable : true,
+    get() {
+      return read.call(object)
+    },
+    set(nextValue) {
+      const previousValue = read.call(object)
+      console.log(`Setting key ${key} from ${previousValue} to ${nextValue}`)
+      write.call(object, nextValue)
+    }
   })
 
   return () => {
-    polyfilledObject.unwatch(key)
+    if (descriptor) {
+      if ('value' in descriptor) descriptor.value = value
+      Object.defineProperty(object, key, descriptor)
+    } else {
+      Object.defineProperty(object, key, {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        value
+      })
+    }
   }
 }
 
@@ -2829,30 +2783,63 @@ export function observeObjectKeys(object, key) {
  * @param {string} base64
  */
 export function base64ToBytes(base64) {
-  const binString = atob(base64);
-  return Uint8Array.from(binString, (m) => {
-    const codePoint = m.codePointAt(0)
-    if (codePoint === undefined) throw new Error('undefined codePoint')
-    return codePoint
-  });
+  const encoded = base64.replace(/[\t\n\f\r ]/g, '')
+  const padding = encoded.match(/=+$/)?.[0].length || 0
+  const normalized = encoded.replace(/=+$/, '')
+  if (
+    !/^[A-Za-z0-9+/]*={0,2}$/.test(encoded) ||
+    normalized.length % 4 === 1 ||
+    (padding > 0 && (encoded.length % 4 !== 0 || padding !== (4 - normalized.length % 4) % 4))
+  ) {
+    throw new TypeError('Invalid base64 input')
+  }
+
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+  const bytes = new Uint8Array(Math.floor(normalized.length * 6 / 8))
+  let buffer = 0
+  let bitCount = 0
+  let index = 0
+  for (const character of normalized) {
+    buffer = (buffer << 6) | alphabet.indexOf(character)
+    bitCount += 6
+    if (bitCount >= 8) {
+      bitCount -= 8
+      bytes[index++] = (buffer >> bitCount) & 255
+    }
+  }
+  return bytes
 }
 /**
  * @see https://developer.mozilla.org/en-US/docs/Glossary/Base64#the_unicode_problem
- * @param {string} base64
+ * @param {Uint8Array} bytes
  */
-export function bytesToBase64(base64) {
-  const binString = Array.from(base64, (byte) => String.fromCodePoint(Number(byte))).join("");
-  return btoa(binString);
+export function bytesToBase64(bytes) {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+  let encoded = ''
+
+  for (let i = 0; i < bytes.length; i += 3) {
+    const first = bytes[i]
+    const second = bytes[i + 1] || 0
+    const third = bytes[i + 2] || 0
+    const chunk = (first << 16) | (second << 8) | third
+
+    encoded += alphabet[(chunk >> 18) & 63]
+    encoded += alphabet[(chunk >> 12) & 63]
+    encoded += i + 1 < bytes.length ? alphabet[(chunk >> 6) & 63] : '='
+    encoded += i + 2 < bytes.length ? alphabet[chunk & 63] : '='
+  }
+
+  return encoded
 }
 /**
  * @param {string} ascii  
  */
 export function atobUnicode(ascii) {
-  return base64ToBytes(new TextEncoder().encode(ascii).toString())
+  return new TextDecoder().decode(base64ToBytes(ascii))
 }
 /**
  * @param {string} base64 
  */
 export function btoaUnicode(base64) {
-  return new TextDecoder().decode(base64ToBytes(base64))
+  return bytesToBase64(new TextEncoder().encode(base64))
 }

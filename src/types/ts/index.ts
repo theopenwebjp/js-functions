@@ -72,6 +72,7 @@ export interface CustomElementBase {
 export type CustomElement = HTMLElement & CustomElementBase;
 
 export interface CustomElementOptions {
+  /** Trusted application-authored markup only; sanitize untrusted content before use. */
   html?: string;
   htmlData?: Record<string, string>;
   css?: string;
@@ -187,6 +188,7 @@ export type DomElementSettings = {
       [x: string]: string;
   };
   textContent: string;
+  /** Rendered as text by createElement; raw HTML must be handled by a vetted sanitizer. */
   innerHTML: string;
   events: {
       [x: string]: (...args: any[]) => any;

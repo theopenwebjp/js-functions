@@ -153,6 +153,7 @@ export function stopCameraStreamObject(o, removeFromDom = false) {
 
   // Destroy video
   if (o.video) {
+    o.video.srcObject = null
     o.video.src = ''
     if (removeFromDom && o.video.parentElement) {
       o.video.parentElement.removeChild(o.video)
@@ -341,7 +342,13 @@ export function getUnlimitedConstraints() {
 export function getBestConstraints() {
   return new Promise((resolve, reject) => {
     getUserMediaWithWorkingConstraints(undefined, (stream) => {
-      resolve(getStreamConstraints(stream))
+      try {
+        resolve(getStreamConstraints(stream))
+      } catch (error) {
+        reject(error)
+      } finally {
+        stream.getTracks().forEach(track => track.stop())
+      }
     }, reject)
   })
 }

@@ -3,58 +3,68 @@ This file is for functions aimed at services.
 "Services" do not have dependencies. They are service specific such as an endpoint.
 */
 
+const CORS_ANYWHERE_HOST = 'cors-anywhere.herokuapp.com'
+
 /**
-* First request temporary access below:
-* @see https://cors-anywhere.herokuapp.com/corsdemo
-* 
-* @see https://github.com/Rob--W/cors-anywhere/issues/301
-* @see https://github.com/Rob--W/cors-anywhere
-*
-* @example corsAnywhereFetch()
-*/
-export function corsAnywhereFetch() {
-  let cors_api_host = 'cors-anywhere.herokuapp.com';
-  let cors_api_url = 'https://' + cors_api_host + '/';
-  let slice = [].slice;
-  let origin = window.location.protocol + '//' + window.location.host;
-  let f = window.fetch;
-  /**
-  * @param {string} url
-  * @param {any} [options]
-  */
-  // @ts-ignore
-  window.fetch = function(url, options = {}) {
-      // let targetOrigin = /^https?:\/\/([^\/]+)/i.exec(url);
-      let targetOrigin = /^https?:\/\/([^/]+)/i.exec(url);
-      if (targetOrigin && targetOrigin[0].toLowerCase() !== origin &&
-          targetOrigin[1] !== cors_api_host) {
-          url = cors_api_url + url;
-      }
-      return f(url, options)
-  };
+ * Makes one explicit credential-free GET request through CORS Anywhere.
+ * Does not modify the global fetch implementation.
+ * @param {string} url
+ * @param {RequestInit} [options]
+ * @return {Promise<Response>}
+ */
+export function corsAnywhereFetch(url, options = {}) {
+  const target = new URL(url, window.location.href)
+  if (target.protocol !== 'http:' && target.protocol !== 'https:') {
+    throw new TypeError(`Unsupported URL protocol: ${target.protocol}`)
+  }
+
+  if (target.origin === window.location.origin || target.host === CORS_ANYWHERE_HOST) {
+    return window.fetch(url, options)
+  }
+
+  const method = (options.method || 'GET').toUpperCase()
+  if (method !== 'GET' || options.body != null) {
+    throw new TypeError('The CORS proxy only supports credential-free GET requests')
+  }
+
+  const headers = new Headers(options.headers)
+  headers.delete('authorization')
+  headers.delete('proxy-authorization')
+  headers.delete('cookie')
+
+  return window.fetch(`https://${CORS_ANYWHERE_HOST}/${url}`, {
+    ...options,
+    method,
+    body: undefined,
+    credentials: 'omit',
+    headers
+  })
 }
 
 /**
-* AJAX CORS
-* @see https://github.com/Rob--W/cors-anywhere#client
-*/ 
-export function corsAnywhereAJAX() {
-  let cors_api_host = 'cors-anywhere.herokuapp.com';
-  let cors_api_url = 'https://' + cors_api_host + '/';
-  let slice = [].slice;
-  let origin = window.location.protocol + '//' + window.location.host;
-  let open = XMLHttpRequest.prototype.open;
-  XMLHttpRequest.prototype.open = function() {
-     /**
-     * @type {string[]}
-     */
-      let args = slice.call(arguments);
-      // let targetOrigin = /^https?:\/\/([^\/]+)/i.exec(args[1]);
-      let targetOrigin = /^https?:\/\/([^/]+)/i.exec(args[1]);
-      if (targetOrigin && targetOrigin[0].toLowerCase() !== origin &&
-          targetOrigin[1] !== cors_api_host) {
-          args[1] = cors_api_url + args[1];
-      }
-      return open.apply(this, /** @type {[any, any, any]} */ (args));
-  };
+ * Makes one explicit credential-free GET request through CORS Anywhere.
+ * Does not modify XMLHttpRequest.prototype.
+ * @param {string} url
+ * @param {(event: ProgressEvent<EventTarget>) => void} [onload]
+ * @param {(event: ProgressEvent<EventTarget>) => void} [onerror]
+ * @return {XMLHttpRequest}
+ */
+export function corsAnywhereAJAX(url, onload = undefined, onerror = undefined) {
+  const target = new URL(url, window.location.href)
+  if (target.protocol !== 'http:' && target.protocol !== 'https:') {
+    throw new TypeError(`Unsupported URL protocol: ${target.protocol}`)
+  }
+
+  const request = new XMLHttpRequest()
+  request.open(
+    'GET',
+    target.origin === window.location.origin || target.host === CORS_ANYWHERE_HOST
+      ? url
+      : `https://${CORS_ANYWHERE_HOST}/${url}`
+  )
+  request.withCredentials = false
+  if (onload) request.addEventListener('load', onload)
+  if (onerror) request.addEventListener('error', onerror)
+  request.send()
+  return request
 }

@@ -26,6 +26,12 @@ describe('object-helpers', function () {
       chai.expect(copy.c === obj.c).to.equal(false)
       chai.expect(copy.c.a === obj.c.a).to.equal(false)
     })
+
+    it('throws instead of returning an empty object when copying fails', () => {
+      const circular = {}
+      circular.self = circular
+      chai.expect(() => ObjectHelpers.copyObject(circular)).to.throw(TypeError)
+    })
   })
 
   describe('copyObjectData', function () {
@@ -61,6 +67,17 @@ describe('object-helpers', function () {
       chai.expect(ObjectHelpers.applyObj(from, to, condition)).to.deep.equal({
         a: 1
       })
+
+    })
+
+    it('copies __proto__ as an own key without changing the destination prototype', () => {
+      const source = JSON.parse('{"__proto__":{"polluted":true}}')
+      const target = {}
+
+      ObjectHelpers.applyObj(source, target)
+
+      chai.expect(Object.prototype.hasOwnProperty.call(target, '__proto__')).to.equal(true)
+      chai.expect(Object.getPrototypeOf(target)).to.equal(Object.prototype)
     })
   })
 
@@ -291,6 +308,18 @@ describe('object-helpers', function () {
         console.debug('watchObjectProperty', err)
         chai.assert(false)
       }
+    })
+
+    it('preserves normal reads and writes and restores the property on stop', () => {
+      const object = { value: 1 }
+      const watcher = ObjectHelpers.watchObjectProperty(object, 'value')
+
+      chai.expect(object.value).to.equal(1)
+      object.value = 2
+      chai.expect(object.value).to.equal(2)
+      watcher.stop()
+      object.value = 3
+      chai.expect(object.value).to.equal(3)
     })
   })
 

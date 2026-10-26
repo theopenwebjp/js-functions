@@ -129,9 +129,7 @@ export function buildDelimiterString(arr, format) {
    * @return {*[]}
    */
 export function uniqueArray(arr) {
-  return arr.filter((value, index, array) => {
-    return array.indexOf(value) === index
-  })
+  return [...new Set(arr)]
 }
 
 /**

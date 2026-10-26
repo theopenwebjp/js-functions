@@ -78,5 +78,6 @@ describe('array-helpers', function(){
     describe('uniqueArray', ()=>{
         const h = ArrayHelpers.uniqueArray;
         chai.expect(h([1,1,2,2,1,2])).to.deep.equal([1,2]);
+        chai.expect(h([NaN, NaN])).to.have.lengthOf(1);
     });
 });
